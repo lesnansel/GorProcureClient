@@ -1,214 +1,412 @@
+<!-- eslint-disable vue/no-parsing-error -->
 <template>
   <div class="app-container">
     <!-- Sidebar -->
     <AdminNavigationBar v-model:sidebarOpen="sidebarOpen" />
     <!-- Main Content Area -->
-    <div class="main-content" :class="{ 'expanded': !sidebarOpen }" style="flex: 1; transition: margin-left 0.3s;">
-      <!-- Background Pattern -->
-      <div class="background-pattern">
-        <div class="pattern-overlay"></div>
-      </div>
-
-      <!-- Admin Card -->
-      <div class="admin-card">
-        <div class="card-header card-header-flex">
-          <div class="logo-title-flex">
-            <img src="@/assets/proculogo.png" alt="Procurement System Logo" class="logo" />
-            <div class="header-texts">
-              <h1 class="title">Admin Dashboard</h1>
-              <p class="subtitle">System Overview and Management</p>
-            </div>
-          </div>
+    <div 
+      class="main-content"
+      :class="['transition-all duration-300 ease-in-out', sidebarOpen ? 'ml-[250px]' : 'ml-0']"
+    >
+      <div class="content-wrapper">
+        <!-- Background Pattern -->
+        <div class="background-pattern">
+          <div class="pattern-overlay"></div>
         </div>
 
-        <div class="card-content">
-          <!-- Loading State -->
-          <div v-if="loading" class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading admin dashboard...</p>
+        <!-- Admin Card -->
+        <div class="admin-card">
+          <div class="card-header card-header-flex">
+            <div class="logo-title-flex">
+              <img src="@/assets/proculogo.png" alt="Procurement System Logo" class="logo" />
+              <div class="header-texts">
+                <h1 class="title">Admin Dashboard</h1>
+                <p class="subtitle">System Overview and Management</p>
+              </div>
+            </div>
           </div>
-          <div v-else>
-            <!-- Quick Actions Bar -->
-            <div class="quick-actions-bar">
-              <button @click="refreshStats" class="action-btn" :disabled="refreshing">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': refreshing }"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                Refresh
-              </button>
-              <router-link to="/dashboard" class="action-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
-                User Dashboard
-              </router-link>
+
+          <div class="card-content">
+            <!-- Loading State -->
+            <div v-if="loading" class="loading-state">
+              <div class="spinner"></div>
+              <p>Loading admin dashboard...</p>
             </div>
+            <div v-else>
+              <!-- Quick Actions Bar -->
+              <div class="quick-actions-bar">
+                <button @click="refreshStats" class="action-btn" :disabled="refreshing">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': refreshing }"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                  Refresh
+                </button>
+                <router-link to="/dashboard" class="action-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+                  User Dashboard
+                </router-link>
+              </div>
 
-            <!-- Stats Overview -->
-            <div class="stats-grid">
-              <div class="stat-card">
-                <div class="stat-icon users" style="background-color:rgba(59,130,246,0.1);color:#3b82f6;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="4"/><path d="M3 8V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ invitationStats.total }}</span>
-                  <span class="stat-label">Total Invitations</span>
-                  <div style="font-size:0.9rem;">
-                    <span style="color:#16a34a;">Active: {{ invitationStats.active }}</span> |
-                    <span style="color:#eab308;">Archived: {{ invitationStats.archived }}</span> |
-                    <span style="color:#e53e3e;">Expired: {{ invitationStats.expired }}</span>
+              <!-- Stats Overview -->
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon users" style="background-color:rgba(59,130,246,0.1);color:#3b82f6;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="4"/><path d="M3 8V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/></svg>
                   </div>
-                  <div style="margin-top:8px;font-size:0.9rem;">
-                    <span style="color:#3b82f6;">This Week: {{ invitationStats.thisWeek }}</span> |
-                    <span style="color:#a855f7;">This Month: {{ invitationStats.thisMonth }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon users">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ stats.totalUsers }}</span>
-                  <span class="stat-label">Total Users</span>
-                </div>
-                <div class="stat-change" :class="stats.userGrowth >= 0 ? 'positive' : 'negative'">
-                  <svg v-if="stats.userGrowth >= 0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                  {{ Math.abs(stats.userGrowth) }}%
-                </div>
-              </div>
-
-              <div class="stat-card">
-                <div class="stat-icon active">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ stats.activeUsers }}</span>
-                  <span class="stat-label">Active Users</span>
-                </div>
-                <div class="stat-percentage">
-                  {{ Math.round((stats.activeUsers / stats.totalUsers) * 100) || 0 }}%
-                </div>
-              </div>
-
-              <div class="stat-card">
-                <div class="stat-icon new" style="background-color:rgba(168,85,247,0.1);color:#a855f7;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ stats.newUsers }}</span>
-                  <span class="stat-label">New Users (24h)</span>
-                </div>
-              </div>
-
-              <div class="stat-card">
-                <div class="stat-icon system" style="background-color:rgba(59,130,246,0.1);color:#3b82f6;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ stats.systemHealth }}%</span>
-                  <span class="stat-label">System Health</span>
-                  <div class="health-indicator" :class="getHealthStatus(stats.systemHealth)"></div>
-                </div>
-              </div>
-
-              <!-- New stat card for Overdue Invitations -->
-              <div class="stat-card">
-                <div class="stat-icon new" style="background-color:rgba(239,68,68,0.1);color:#ef4444;">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                </div>
-                <div class="stat-info">
-                  <span class="stat-value">{{ overdueCount }}</span>
-                  <span class="stat-label">Overdue Invitations</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Management Sections -->
-            <div class="management-grid">
-              <!-- User Management -->
-              <div class="management-card">
-                <div class="card-header">
-                  <h2>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                    User Management
-                  </h2>
-                  <router-link to="/admin-management" class="view-all">
-                    View All
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </router-link>
-                </div>
-                <div class="recent-users">
-                  <div v-for="user in recentUsers" :key="user.id" class="user-item">
-                    <img :src="user.avatar || defaultAvatar" :alt="user.name">
-                    <div class="user-info">
-                      <span class="user-name">{{ user.name }}</span>
-                      <span class="user-email">{{ user.email }}</span>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ invitationStats.total }}</span>
+                    <span class="stat-label">Total Invitations</span>
+                    <div style="font-size:0.9rem;">
+                      <span style="color:#16a34a;">Active: {{ invitationStats.active }}</span> |
+                      <span style="color:#eab308;">Archived: {{ invitationStats.archived }}</span> |
+                      <span style="color:#e53e3e;">Expired: {{ invitationStats.expired }}</span>
                     </div>
-                    <span class="user-status" :class="user.status">
-                      {{ user.status }}
-                    </span>
-                  </div>
-                  <div v-if="!recentUsers.length" class="empty-list">
-                    <p>No users found</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- System Logs -->
-              <div class="management-card">
-                <div class="card-header">
-                  <h2>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Recent System Logs
-                  </h2>
-                  <router-link to="/system-logs" class="view-all">
-                    View All
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </router-link>
-                </div>
-                <div class="log-list">
-                  <div v-for="log in recentLogs" :key="log.id" class="log-item">
-                    <span class="log-type" :class="log.type">
-                      <svg v-if="log.type === 'info'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                      <svg v-else-if="log.type === 'warning'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                      <svg v-else-if="log.type === 'error'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                      <svg v-else-if="log.type === 'success'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    </span>
-                    <div class="log-info">
-                      <span class="log-message">{{ log.message }}</span>
-                      <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+                    <div style="margin-top:8px;font-size:0.9rem;">
+                      <span style="color:#3b82f6;">This Week: {{ invitationStats.thisWeek }}</span> |
+                      <span style="color:#a855f7;">This Month: {{ invitationStats.thisMonth }}</span>
                     </div>
                   </div>
-                  <div v-if="!recentLogs.length" class="empty-list">
-                    <p>No logs found</p>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon users">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ stats.totalUsers }}</span>
+                    <span class="stat-label">Total Users</span>
+                  </div>
+                  <div class="stat-change" :class="stats.userGrowth >= 0 ? 'positive' : 'negative'">
+                    <svg v-if="stats.userGrowth >= 0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    {{ Math.abs(stats.userGrowth) }}%
+                  </div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-icon active">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ stats.activeUsers }}</span>
+                    <span class="stat-label">Active Users</span>
+                  </div>
+                  <div class="stat-percentage">
+                    {{ Math.round((stats.activeUsers / stats.totalUsers) * 100) || 0 }}%
+                  </div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-icon new" style="background-color:rgba(168,85,247,0.1);color:#a855f7;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ stats.newUsers }}</span>
+                    <span class="stat-label">New Users (24h)</span>
+                  </div>
+                </div>
+
+                <div class="stat-card">
+                  <div class="stat-icon system" style="background-color:rgba(59,130,246,0.1);color:#3b82f6;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ stats.systemHealth }}%</span>
+                    <span class="stat-label">System Health</span>
+                    <div class="health-indicator" :class="getHealthStatus(stats.systemHealth)"></div>
+                  </div>
+                </div>
+
+                <!-- New stat card for Overdue Invitations -->
+                <div class="stat-card">
+                  <div class="stat-icon new" style="background-color:rgba(239,68,68,0.1);color:#ef4444;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-value">{{ overdueCount }}</span>
+                    <span class="stat-label">Overdue Invitations</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Quick Actions -->
-            <div class="quick-actions-grid">
-              <button class="quick-action-btn" @click="backupSystem">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                Backup System
-              </button>
-              <button class="quick-action-btn" @click="clearCache">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                Clear Cache
-              </button>
-              <button class="quick-action-btn" @click="generateReport">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                Generate Report
-              </button>
-              <button class="quick-action-btn warning" @click="showMaintenanceModal">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                Maintenance Mode
-              </button>
+              <!-- Charts Section -->
+              <div class="charts-section">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  Analytics Dashboard
+                </h2>
+                
+                <div class="charts-grid">
+                  <!-- User Growth Chart -->
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h3>User Growth</h3>
+                      <select v-model="userGrowthPeriod" @change="updateUserGrowthChart" class="chart-select">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 3 months</option>
+                      </select>
+                    </div>
+                    <div class="chart-container">
+                      <Line 
+                        :data="userGrowthData" 
+                        :options="chartOptions" 
+                        :key="userGrowthPeriod"
+                      />
+                    </div>
+                  </div>
 
-              <!-- New buttons for admin-specific functionalities -->
-              <button class="quick-action-btn" @click="navigateTo('admin-management')">
-                Admin Management
-              </button>
-            </div>
-          </div> <!-- End of v-else -->
+                  <!-- Invitation Status Chart -->
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h3>Invitation Status Distribution</h3>
+                    </div>
+                    <div class="chart-container">
+                      <Doughnut 
+                        :data="invitationStatusData" 
+                        :options="doughnutOptions"
+                        :key="`doughnut-${invitationStats.total}`"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Budget Usage Chart -->
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h3>Budget Usage Overview</h3>
+                    </div>
+                    <div class="chart-container">
+                      <Bar 
+                        :data="budgetData" 
+                        :options="barChartOptions"
+                        :key="`budget-${budgetStats.totalBudget}`"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- System Activity Chart -->
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h3>System Activity (Last 24 Hours)</h3>
+                    </div>
+                    <div class="chart-container">
+                      <Line 
+                        :data="activityData" 
+                        :options="activityChartOptions"
+                        :key="`activity-${Date.now()}`"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Supplier Behavior Prediction Chart -->
+                  <div class="chart-card">
+                    <div class="chart-header">
+                      <h3>Supplier Performance Prediction</h3>
+                      <button @click="generatePredictions" class="prediction-btn" :disabled="generatingPredictions">
+                        {{ generatingPredictions ? 'Analyzing...' : 'Update Predictions' }}
+                      </button>
+                    </div>
+                    <div class="chart-container">
+                      <Line 
+                        :data="predictionData" 
+                        :options="predictionChartOptions"
+                        :key="`prediction-${supplierPredictions.totalSuppliers}`"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Supplier Prediction Section -->
+              <div class="prediction-section">
+                <h2 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6"/><path d="m21 12-6-6m-6 6-6-6"/></svg>
+                  Supplier Behavior Predictions
+                </h2>
+                
+                <div class="prediction-grid">
+                  <!-- Risk Analysis Cards -->
+                  <div class="prediction-card high-risk">
+                    <div class="prediction-header">
+                      <div class="risk-icon high">⚠️</div>
+                      <h3>High Risk Suppliers</h3>
+                    </div>
+                    <div class="prediction-content">
+                      <div class="risk-count">{{ supplierPredictions.highRisk }}</div>
+                      <div class="risk-description">Suppliers with >70% risk of delays or issues</div>
+                      <div class="risk-actions">
+                        <span class="recommendation">Action Required</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="prediction-card medium-risk">
+                    <div class="prediction-header">
+                      <div class="risk-icon medium">⚡</div>
+                      <h3>Medium Risk Suppliers</h3>
+                    </div>
+                    <div class="prediction-content">
+                      <div class="risk-count">{{ supplierPredictions.mediumRisk }}</div>
+                      <div class="risk-description">Suppliers with 30-70% risk probability</div>
+                      <div class="risk-actions">
+                        <span class="recommendation">Monitor Closely</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="prediction-card low-risk">
+                    <div class="prediction-header">
+                      <div class="risk-icon low">✅</div>
+                      <h3>Low Risk Suppliers</h3>
+                    </div>
+                    <div class="prediction-content">
+                      <div class="risk-count">{{ supplierPredictions.lowRisk }}</div>
+                      <div class="risk-description">Reliable suppliers with <30% risk</div>
+                      <div class="risk-actions">
+                        <span class="recommendation">Preferred Partners</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Predictions Summary -->
+                  <div class="prediction-card summary">
+                    <div class="prediction-header">
+                      <div class="risk-icon summary">📊</div>
+                      <h3>Prediction Summary</h3>
+                    </div>
+                    <div class="prediction-content">
+                      <div class="summary-stats">
+                        <div class="stat-item">
+                          <span class="stat-label">Average Reliability</span>
+                          <span class="stat-value">{{ supplierPredictions.averageReliability }}%</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label">Predicted Delays</span>
+                          <span class="stat-value">{{ supplierPredictions.predictedDelays }}</span>
+                        </div>
+                        <div class="stat-item">
+                          <span class="stat-label">Total Suppliers</span>
+                          <span class="stat-value">{{ supplierPredictions.totalSuppliers }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AI Recommendations -->
+                <div class="recommendations-section" v-if="supplierPredictions.recommendations.length">
+                  <h3 class="recommendations-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H1l6-6 6 6h-8"/><path d="M23 11h-8l6-6 6 6h-8"/><path d="M7 21v-6h10v6"/></svg>
+                    AI Recommendations
+                  </h3>
+                  <div class="recommendations-list">
+                    <div 
+                      v-for="(recommendation, index) in supplierPredictions.recommendations" 
+                      :key="index" 
+                      class="recommendation-item"
+                      :class="recommendation.priority"
+                    >
+                      <div class="recommendation-icon">
+                        <span v-if="recommendation.priority === 'high'">🚨</span>
+                        <span v-else-if="recommendation.priority === 'medium'">⚠️</span>
+                        <span v-else>💡</span>
+                      </div>
+                      <div class="recommendation-content">
+                        <div class="recommendation-title">{{ recommendation.title }}</div>
+                        <div class="recommendation-description">{{ recommendation.description }}</div>
+                        <div class="recommendation-action">{{ recommendation.action }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Management Sections -->
+              <div class="management-grid">
+                <!-- User Management -->
+                <div class="management-card">
+                  <div class="card-header">
+                    <h2>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                      User Management
+                    </h2>
+                    <router-link to="/admin-management" class="view-all">
+                      View All
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </router-link>
+                  </div>
+                  <div class="recent-users">
+                    <div v-for="user in recentUsers" :key="user.id" class="user-item">
+                      <img :src="user.avatar || defaultAvatar" :alt="user.name">
+                      <div class="user-info">
+                        <span class="user-name">{{ user.name }}</span>
+                        <span class="user-email">{{ user.email }}</span>
+                      </div>
+                      <span class="user-status" :class="user.status">
+                        {{ user.status }}
+                      </span>
+                    </div>
+                    <div v-if="!recentUsers.length" class="empty-list">
+                      <p>No users found</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- System Logs -->
+                <div class="management-card">
+                  <div class="card-header">
+                    <h2>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"></polyline></svg>
+                      Recent System Logs
+                    </h2>
+                    <router-link to="/system-logs" class="view-all">
+                      View All
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </router-link>
+                  </div>
+                  <div class="log-list">
+                    <div v-for="log in recentLogs" :key="log.id" class="log-item">
+                      <span class="log-type" :class="log.type">
+                        <svg v-if="log.type === 'info'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <svg v-else-if="log.type === 'warning'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                        <svg v-else-if="log.type === 'error'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        <svg v-else-if="log.type === 'success'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      </span>
+                      <div class="log-info">
+                        <span class="log-message">{{ log.message }}</span>
+                        <span class="log-time">{{ formatTime(log.timestamp) }}</span>
+                      </div>
+                    </div>
+                    <div v-if="!recentLogs.length" class="empty-list">
+                      <p>No logs found</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="quick-actions-grid">
+                <button class="quick-action-btn" @click="backupSystem">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                  Backup System
+                </button>
+                <button class="quick-action-btn" @click="clearCache">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Clear Cache
+                </button>
+                <button class="quick-action-btn" @click="generateReport">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  Generate Report
+                </button>
+                <button class="quick-action-btn warning" @click="showMaintenanceModal">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                  Maintenance Mode
+                </button>
+
+                <!-- New buttons for admin-specific functionalities -->
+                <button class="quick-action-btn" @click="navigateTo('admin-management')">
+                  Admin Management
+                </button>
+              </div>
+            </div> <!-- End of v-else -->
+          </div>
         </div>
       </div>
     </div>
@@ -268,9 +466,52 @@
 
 <script setup>
 import AdminNavigationBar from './AdminNavigationBar.vue';
+import { ref, onMounted } from 'vue';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useRouter } from 'vue-router';
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Filler
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'vue-chartjs';
 
+// Register Chart.js components
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Filler
+);
+
+// Router for navigation
+const router = useRouter();
+
+// State
 const sidebarOpen = ref(true);
+const loading = ref(true);
+const refreshing = ref(false);
+const showMaintenance = ref(false);
+const maintenanceMessage = ref('');
+const maintenanceDuration = ref('');
+const defaultAvatar = "https://ui-avatars.com/api/?background=0F2942&color=fff";
 
+// Stats
 const invitationStats = ref({
   total: 0,
   active: 0,
@@ -281,6 +522,54 @@ const invitationStats = ref({
 });
 
 const overdueCount = ref(0);
+
+const stats = ref({
+  totalUsers: 0,
+  activeUsers: 0,
+  newUsers: 0,
+  userGrowth: 0,
+  systemHealth: 98,
+});
+
+const budgetStats = ref({
+  totalBudget: 0,
+  totalSpent: 0,
+  usagePercent: 0,
+});
+
+// Recent Users and Logs
+const recentUsers = ref([]);
+const recentLogs = ref([]);
+
+// Supplier Behavior Prediction
+const supplierPredictions = ref({
+  totalSuppliers: 0,
+  highRisk: 0,
+  mediumRisk: 0,
+  lowRisk: 0,
+  averageReliability: 0,
+  predictedDelays: 0,
+  recommendations: []
+});
+
+const predictionData = ref({
+  labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  datasets: [{
+    label: 'Predicted Performance Score',
+    data: [75, 78, 72, 85, 82, 88],
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    tension: 0.4,
+    fill: true
+  }, {
+    label: 'Risk Level',
+    data: [25, 22, 28, 15, 18, 12],
+    borderColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    tension: 0.4,
+    fill: true
+  }]
+});
 
 const fetchInvitationAnalytics = async () => {
   try {
@@ -329,42 +618,169 @@ const fetchInvitationAnalytics = async () => {
   }
 };
 
-import { ref, onMounted } from 'vue';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useRouter } from 'vue-router';
-
-// Router for navigation
-const router = useRouter();
-
-// State
-const loading = ref(true);
-const refreshing = ref(false);
-const showMaintenance = ref(false);
-const maintenanceMessage = ref('');
-const maintenanceDuration = ref('');
-const defaultAvatar = "https://ui-avatars.com/api/?background=0F2942&color=fff";
-
-// Stats
-const stats = ref({
-  totalUsers: 0,
-  activeUsers: 0,
-  newUsers: 0,
-  userGrowth: 0,
-  systemHealth: 98,
+// Chart Data
+const userGrowthPeriod = ref('30');
+const userGrowthData = ref({
+  labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+  datasets: [{
+    label: 'New Users',
+    data: [5, 8, 3, 12, 7, 9, 15],
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    tension: 0.4,
+    fill: true
+  }]
 });
 
-const budgetStats = ref({
-  totalBudget: 0,
-  totalSpent: 0,
-  usagePercent: 0,
+const invitationStatusData = ref({
+  labels: ['Active', 'Archived', 'Expired', 'Pending'],
+  datasets: [{
+    data: [25, 15, 8, 12],
+    backgroundColor: [
+      '#22c55e',
+      '#eab308',
+      '#ef4444',
+      '#3b82f6'
+    ],
+    borderWidth: 2,
+    borderColor: '#fff'
+  }]
 });
 
-// Recent Users
-const recentUsers = ref([]);
+const budgetData = ref({
+  labels: ['Allocated', 'Spent', 'Remaining'],
+  datasets: [{
+    label: 'Budget (₱)',
+    data: [1000000, 650000, 350000],
+    backgroundColor: [
+      'rgba(59, 130, 246, 0.8)',
+      'rgba(239, 68, 68, 0.8)',
+      'rgba(34, 197, 94, 0.8)'
+    ],
+    borderColor: [
+      '#3b82f6',
+      '#ef4444',
+      '#22c55e'
+    ],
+    borderWidth: 1
+  }]
+});
 
-// Recent Logs
-const recentLogs = ref([]);
+const activityData = ref({
+  labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+  datasets: [{
+    label: 'User Activity',
+    data: [12, 8, 25, 45, 35, 20],
+    borderColor: '#a855f7',
+    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+    tension: 0.4,
+    fill: true
+  }]
+});
+
+// Chart Options
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+    },
+    title: {
+      display: false
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(0, 0, 0, 0.1)'
+      }
+    },
+    x: {
+      grid: {
+        color: 'rgba(0, 0, 0, 0.1)'
+      }
+    }
+  }
+};
+
+const doughnutOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+    }
+  }
+};
+
+const barChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        callback: function(value) {
+          return '₱' + value.toLocaleString();
+        }
+      }
+    }
+  }
+};
+
+const activityChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true
+    }
+  }
+};
+
+const predictionChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+    },
+    title: {
+      display: false
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: {
+        callback: function(value) {
+          return value + '%';
+        }
+      }
+    },
+    x: {
+      grid: {
+        color: 'rgba(0, 0, 0, 0.1)'
+      }
+    }
+  }
+};
+
+// Add reactive variable for prediction generation
+const generatingPredictions = ref(false);
 
 // Load initial data
 onMounted(async () => {
@@ -372,6 +788,11 @@ onMounted(async () => {
     await loadDashboardData();
     await fetchInvitationAnalytics();
     await fetchBudgetStats();
+    
+    // Initialize charts
+    await updateUserGrowthChart();
+    updateInvitationStatusChart();
+    updateActivityChart();
   } finally {
     loading.value = false;
   }
@@ -379,11 +800,15 @@ onMounted(async () => {
 
 const loadDashboardData = async () => {
   try {
-    // Fetch users
-    const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(5));
-    const usersSnapshot = await getDocs(usersQuery);
+    // Fetch ALL users for accurate statistics
+    const usersRef = collection(db, 'users');
+    const allUsersSnapshot = await getDocs(usersRef);
     
-    recentUsers.value = usersSnapshot.docs.map(doc => ({
+    // Fetch recent users for display
+    const recentUsersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(5));
+    const recentUsersSnapshot = await getDocs(recentUsersQuery);
+    
+    recentUsers.value = recentUsersSnapshot.docs.map(doc => ({
       id: doc.id,
       name: doc.data().username || 'Unknown User',
       email: doc.data().email,
@@ -391,16 +816,76 @@ const loadDashboardData = async () => {
       status: doc.data().status || 'active'
     }));
 
-    // Calculate stats
+    // Calculate accurate stats from all users
+    let totalUsers = 0;
+    let activeUsers = 0;
+    let newUsers = 0;
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    allUsersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      totalUsers++;
+      
+      // Count active users
+      if (userData.status === 'active' || !userData.status) {
+        activeUsers++;
+      }
+      
+      // Count new users (last 24 hours)
+      if (userData.createdAt) {
+        let createdDate;
+        if (userData.createdAt.seconds) {
+          createdDate = new Date(userData.createdAt.seconds * 1000);
+        } else if (typeof userData.createdAt === 'string') {
+          createdDate = new Date(userData.createdAt);
+        } else {
+          createdDate = new Date(userData.createdAt);
+        }
+        
+        if (createdDate >= oneDayAgo) {
+          newUsers++;
+        }
+      }
+    });
+
+    // Calculate user growth percentage (comparing last 30 days vs previous 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    let usersLastMonth = 0;
+    let usersPreviousMonth = 0;
+
+    allUsersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      if (userData.createdAt) {
+        let createdDate;
+        if (userData.createdAt.seconds) {
+          createdDate = new Date(userData.createdAt.seconds * 1000);
+        } else {
+          createdDate = new Date(userData.createdAt);
+        }
+        
+        if (createdDate >= thirtyDaysAgo) {
+          usersLastMonth++;
+        } else if (createdDate >= sixtyDaysAgo) {
+          usersPreviousMonth++;
+        }
+      }
+    });
+
+    const userGrowth = usersPreviousMonth > 0 
+      ? ((usersLastMonth - usersPreviousMonth) / usersPreviousMonth * 100)
+      : (usersLastMonth > 0 ? 100 : 0);
+
     stats.value = {
-      totalUsers: usersSnapshot.size,
-      activeUsers: recentUsers.value.filter(u => u.status === 'active').length,
-      newUsers: recentUsers.value.filter(u => {
-        const created = new Date(u.createdAt);
-        return (Date.now() - created) < 24 * 60 * 60 * 1000;
-      }).length,
-      userGrowth: 5.2, // Example value
-      systemHealth: 98,
+      totalUsers,
+      activeUsers,
+      newUsers,
+      userGrowth: parseFloat(userGrowth.toFixed(1)),
+      systemHealth: 98, // This could be calculated based on system metrics
     };
 
     // Fetch logs
@@ -458,8 +943,281 @@ const fetchBudgetStats = async () => {
     });
     const usagePercent = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
     budgetStats.value = { totalBudget, totalSpent, usagePercent };
+    
+    // Update budget chart
+    updateBudgetChart();
   } catch (error) {
     console.error('Error fetching budget stats:', error);
+  }
+};
+
+// Chart update functions
+const updateUserGrowthChart = async () => {
+  try {
+    const days = parseInt(userGrowthPeriod.value);
+    const labels = [];
+    const data = [];
+    
+    // Fetch all users to analyze registration dates
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+    
+    // Create date buckets for the selected period
+    const dateCounts = {};
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateKey = date.toDateString();
+      dateCounts[dateKey] = 0;
+      labels.push(date.toLocaleDateString());
+    }
+    
+    // Count users by registration date
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      if (userData.createdAt) {
+        let createdDate;
+        if (userData.createdAt.seconds) {
+          createdDate = new Date(userData.createdAt.seconds * 1000);
+        } else if (typeof userData.createdAt === 'string') {
+          createdDate = new Date(userData.createdAt);
+        } else {
+          createdDate = new Date(userData.createdAt);
+        }
+        
+        const dateKey = createdDate.toDateString();
+        if (dateKey in dateCounts) {
+          dateCounts[dateKey]++;
+        }
+      }
+    });
+    
+    // Convert counts to array
+    Object.keys(dateCounts).forEach(dateKey => {
+      data.push(dateCounts[dateKey]);
+    });
+    
+    userGrowthData.value = {
+      labels,
+      datasets: [{
+        label: 'New Users',
+        data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+  } catch (error) {
+    console.error('Error updating user growth chart:', error);
+    // Fallback to sample data if there's an error
+    const days = parseInt(userGrowthPeriod.value);
+    const labels = [];
+    const data = [];
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      labels.push(date.toLocaleDateString());
+      data.push(Math.floor(Math.random() * 5) + 1);
+    }
+    
+    userGrowthData.value = {
+      labels,
+      datasets: [{
+        label: 'New Users',
+        data,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+  }
+};
+
+const updateInvitationStatusChart = () => {
+  const stats = invitationStats.value;
+  
+  // Calculate pending invitations (total minus active, archived, expired)
+  const pending = Math.max(0, stats.total - stats.active - stats.archived - stats.expired);
+  
+  // Only show chart if we have real data
+  const hasData = stats.total > 0;
+  
+  invitationStatusData.value = {
+    labels: ['Active', 'Archived', 'Expired', 'Pending'],
+    datasets: [{
+      data: hasData ? [
+        stats.active,
+        stats.archived,
+        stats.expired,
+        pending
+      ] : [1, 1, 1, 1], // Show minimal data if no invitations exist
+      backgroundColor: [
+        '#22c55e',
+        '#eab308',
+        '#ef4444',
+        '#3b82f6'
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  };
+};
+
+const updateBudgetChart = () => {
+  const allocated = budgetStats.value.totalBudget;
+  const spent = budgetStats.value.totalSpent;
+  const remaining = Math.max(0, allocated - spent);
+  
+  // If no budget data exists, show a message in the chart
+  const hasData = allocated > 0 || spent > 0;
+  
+  budgetData.value = {
+    labels: ['Allocated', 'Spent', 'Remaining'],
+    datasets: [{
+      label: 'Budget (₱)',
+      data: hasData ? [allocated, spent, remaining] : [100000, 0, 100000], // Default values if no data
+      backgroundColor: [
+        'rgba(59, 130, 246, 0.8)',
+        'rgba(239, 68, 68, 0.8)',
+        'rgba(34, 197, 94, 0.8)'
+      ],
+      borderColor: [
+        '#3b82f6',
+        '#ef4444',
+        '#22c55e'
+      ],
+      borderWidth: 1
+    }]
+  };
+};
+
+const updateActivityChart = async () => {
+  try {
+    // Fetch system logs for the last 24 hours to track activity
+    const logsRef = collection(db, 'system_logs');
+    const oneDayAgo = new Date();
+    oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+    
+    const logsSnapshot = await getDocs(logsRef);
+    
+    // Create hourly buckets for the last 24 hours
+    const labels = [];
+    const hourlyCounts = {};
+    
+    for (let i = 23; i >= 0; i--) {
+      const hour = new Date();
+      hour.setHours(hour.getHours() - i);
+      const hourKey = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const hourTimestamp = hour.getHours();
+      
+      labels.push(hourKey);
+      hourlyCounts[hourTimestamp] = 0;
+    }
+    
+    // Count logs by hour
+    logsSnapshot.forEach(doc => {
+      const logData = doc.data();
+      if (logData.timestamp) {
+        let logDate;
+        if (logData.timestamp.seconds) {
+          logDate = new Date(logData.timestamp.seconds * 1000);
+        } else if (typeof logData.timestamp === 'number') {
+          logDate = new Date(logData.timestamp);
+        } else {
+          logDate = new Date(logData.timestamp);
+        }
+        
+        // Only count logs from the last 24 hours
+        if (logDate >= oneDayAgo) {
+          const logHour = logDate.getHours();
+          if (logHour in hourlyCounts) {
+            hourlyCounts[logHour]++;
+          }
+        }
+      }
+    });
+    
+    // Convert to array
+    const data = Object.keys(hourlyCounts).map(hour => hourlyCounts[hour]);
+    
+    // If no real activity data, try to get user login activity as fallback
+    const hasActivity = data.some(count => count > 0);
+    
+    if (!hasActivity) {
+      // Fallback: Check recent user activity (logins, updates, etc.)
+      const usersRef = collection(db, 'users');
+      const usersSnapshot = await getDocs(usersRef);
+      
+      // Reset counts
+      Object.keys(hourlyCounts).forEach(hour => {
+        hourlyCounts[hour] = 0;
+      });
+      
+      usersSnapshot.forEach(doc => {
+        const userData = doc.data();
+        if (userData.lastLogin) {
+          let loginDate;
+          if (userData.lastLogin.seconds) {
+            loginDate = new Date(userData.lastLogin.seconds * 1000);
+          } else if (typeof userData.lastLogin === 'string') {
+            loginDate = new Date(userData.lastLogin);
+          } else {
+            loginDate = new Date(userData.lastLogin);
+          }
+          
+          if (loginDate >= oneDayAgo) {
+            const loginHour = loginDate.getHours();
+            if (loginHour in hourlyCounts) {
+              hourlyCounts[loginHour]++;
+            }
+          }
+        }
+      });
+      
+      // Update data array
+      const newData = Object.keys(hourlyCounts).map(hour => hourlyCounts[hour]);
+      data.splice(0, data.length, ...newData);
+    }
+    
+    activityData.value = {
+      labels,
+      datasets: [{
+        label: 'System Activity',
+        data,
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
+    
+  } catch (error) {
+    console.error('Error updating activity chart:', error);
+    // Fallback to sample data if there's an error
+    const labels = [];
+    const data = [];
+    
+    for (let i = 23; i >= 0; i--) {
+      const hour = new Date();
+      hour.setHours(hour.getHours() - i);
+      labels.push(hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+      data.push(Math.floor(Math.random() * 10) + 1);
+    }
+    
+    activityData.value = {
+      labels,
+      datasets: [{
+        label: 'System Activity',
+        data,
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    };
   }
 };
 
@@ -498,6 +1256,13 @@ const refreshStats = async () => {
   refreshing.value = true;
   try {
     await loadDashboardData();
+    await fetchInvitationAnalytics();
+    await fetchBudgetStats();
+    
+    // Refresh charts with real data
+    await updateUserGrowthChart();
+    updateInvitationStatusChart();
+    await updateActivityChart();
   } finally {
     setTimeout(() => {
       refreshing.value = false;
@@ -505,9 +1270,181 @@ const refreshStats = async () => {
   }
 };
 
-const backupSystem = () => {
-  // Implement backup functionality
-  alert('System backup initiated');
+const backupSystem = async () => {
+  try {
+    // Show loading state
+    const backupBtn = document.querySelector('.quick-action-btn');
+    const originalText = backupBtn?.textContent;
+    if (backupBtn) {
+      backupBtn.textContent = 'Creating Backup...';
+      backupBtn.disabled = true;
+    }
+
+    // Collections to backup
+    const collectionsToBackup = [
+      'users',
+      'invitations',
+      'contracts', 
+      'system_logs',
+      'purchase_requests',
+      'bids',
+      'qualifications',
+      'payments',
+      'notifications'
+    ];
+
+    const backupData = {
+      metadata: {
+        backupDate: new Date().toISOString(),
+        version: '1.0',
+        source: 'GovProcure Admin Dashboard',
+        collections: collectionsToBackup.length
+      },
+      data: {}
+    };
+
+    let totalRecords = 0;
+    let successfulCollections = 0;
+
+    // Backup each collection
+    for (const collectionName of collectionsToBackup) {
+      try {
+        console.log(`Backing up collection: ${collectionName}`);
+        const collectionRef = collection(db, collectionName);
+        const snapshot = await getDocs(collectionRef);
+        
+        const collectionData = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          
+          // Convert Firestore timestamps to ISO strings for JSON compatibility
+          const processedData = processFirestoreData(data);
+          
+          collectionData.push({
+            id: doc.id,
+            data: processedData
+          });
+        });
+
+        backupData.data[collectionName] = {
+          count: collectionData.length,
+          records: collectionData
+        };
+
+        totalRecords += collectionData.length;
+        successfulCollections++;
+        
+        console.log(`✓ ${collectionName}: ${collectionData.length} records`);
+        
+      } catch (error) {
+        console.error(`Error backing up ${collectionName}:`, error);
+        backupData.data[collectionName] = {
+          error: error.message,
+          count: 0,
+          records: []
+        };
+      }
+    }
+
+    // Update metadata with actual counts
+    backupData.metadata.totalRecords = totalRecords;
+    backupData.metadata.successfulCollections = successfulCollections;
+    backupData.metadata.failedCollections = collectionsToBackup.length - successfulCollections;
+
+    // Create and download the backup file
+    const backupJson = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([backupJson], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `govprocure_backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // Create a summary report
+    const summaryData = {
+      backupSummary: {
+        date: new Date().toISOString(),
+        totalCollections: collectionsToBackup.length,
+        successfulCollections,
+        failedCollections: collectionsToBackup.length - successfulCollections,
+        totalRecords,
+        collections: Object.keys(backupData.data).map(name => ({
+          name,
+          records: backupData.data[name].count || 0,
+          status: backupData.data[name].error ? 'Failed' : 'Success',
+          error: backupData.data[name].error || null
+        }))
+      }
+    };
+
+    // Download summary report as well
+    const summaryJson = JSON.stringify(summaryData, null, 2);
+    const summaryBlob = new Blob([summaryJson], { type: 'application/json' });
+    const summaryUrl = window.URL.createObjectURL(summaryBlob);
+    
+    const summaryLink = document.createElement('a');
+    summaryLink.href = summaryUrl;
+    summaryLink.download = `govprocure_backup_summary_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(summaryLink);
+    summaryLink.click();
+    document.body.removeChild(summaryLink);
+    window.URL.revokeObjectURL(summaryUrl);
+
+    // Reset button and show success
+    if (backupBtn) {
+      backupBtn.textContent = originalText;
+      backupBtn.disabled = false;
+    }
+
+    alert(`✅ Backup completed successfully!\n\nSummary:\n- Collections backed up: ${successfulCollections}/${collectionsToBackup.length}\n- Total records: ${totalRecords}\n- Files downloaded: 2 (backup + summary)\n\nBackup files have been downloaded to your Downloads folder.`);
+
+  } catch (error) {
+    console.error('Backup failed:', error);
+    
+    // Reset button on error
+    const backupBtn = document.querySelector('.quick-action-btn');
+    if (backupBtn) {
+      backupBtn.textContent = 'Backup System';
+      backupBtn.disabled = false;
+    }
+    
+    alert(`❌ Backup failed: ${error.message}\n\nPlease check your internet connection and try again.`);
+  }
+};
+
+// Helper function to process Firestore data for JSON export
+const processFirestoreData = (data) => {
+  const processed = {};
+  
+  for (const [key, value] of Object.entries(data)) {
+    if (value && typeof value === 'object') {
+      // Handle Firestore Timestamp objects
+      if (value.seconds && value.nanoseconds !== undefined) {
+        processed[key] = new Date(value.seconds * 1000).toISOString();
+      }
+      // Handle nested objects
+      else if (value.constructor === Object) {
+        processed[key] = processFirestoreData(value);
+      }
+      // Handle arrays
+      else if (Array.isArray(value)) {
+        processed[key] = value.map(item => 
+          typeof item === 'object' && item !== null ? processFirestoreData(item) : item
+        );
+      }
+      else {
+        processed[key] = value;
+      }
+    } else {
+      processed[key] = value;
+    }
+  }
+  
+  return processed;
 };
 
 const clearCache = () => {
@@ -515,9 +1452,265 @@ const clearCache = () => {
   alert('Cache cleared successfully');
 };
 
-const generateReport = () => {
-  // Implement report generation
-  alert('Report generation started');
+const generateReport = async (event) => {
+  try {
+    // Show loading state
+    const button = event.target;
+    const originalText = button.textContent;
+    button.textContent = 'Generating PDF...';
+    button.disabled = true;
+
+    // Check if jsPDF is available
+    let jsPDF;
+    try {
+      const jsPDFModule = await import('jspdf');
+      jsPDF = jsPDFModule.jsPDF;
+    } catch (importError) {
+      console.error('Failed to import jsPDF:', importError);
+      alert('PDF library not available. Please refresh the page and try again.');
+      button.textContent = originalText;
+      button.disabled = false;
+      return;
+    }
+
+    // Create PDF document
+    const doc = new jsPDF();
+
+    // Set up PDF styling
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 20;
+    const margin = 20;
+    const lineHeight = 7;
+
+    // Helper function to add text with word wrap
+    const addText = (text, x, y, maxWidth = pageWidth - 2 * margin) => {
+      try {
+        const lines = doc.splitTextToSize(String(text), maxWidth);
+        doc.text(lines, x, y);
+        return y + (lines.length * lineHeight);
+      } catch (error) {
+        console.error('Error adding text:', error);
+        doc.text(String(text).substring(0, 50) + '...', x, y);
+        return y + lineHeight;
+      }
+    };
+
+    // Helper function to check if we need a new page
+    const checkNewPage = (neededHeight = 20) => {
+      if (yPosition + neededHeight > pageHeight - margin) {
+        doc.addPage();
+        yPosition = 20;
+      }
+    };
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    yPosition = addText('GovProcure System Admin Report', margin, yPosition);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addText(`Generated on: ${new Date().toLocaleString()}`, margin, yPosition + 5);
+    yPosition += 10;
+
+    // Gather all data for the report
+    const reportData = {
+      systemOverview: {
+        totalUsers: stats.value.totalUsers || 0,
+        activeUsers: stats.value.activeUsers || 0,
+        newUsers: stats.value.newUsers || 0,
+        userGrowth: stats.value.userGrowth || 0,
+        systemHealth: stats.value.systemHealth || 0
+      },
+      invitations: {
+        total: invitationStats.value.total || 0,
+        active: invitationStats.value.active || 0,
+        archived: invitationStats.value.archived || 0,
+        expired: invitationStats.value.expired || 0,
+        overdue: overdueCount.value || 0,
+        thisWeek: invitationStats.value.thisWeek || 0,
+        thisMonth: invitationStats.value.thisMonth || 0
+      },
+      budget: {
+        totalBudget: budgetStats.value.totalBudget || 0,
+        totalSpent: budgetStats.value.totalSpent || 0,
+        remaining: (budgetStats.value.totalBudget || 0) - (budgetStats.value.totalSpent || 0),
+        usagePercent: budgetStats.value.usagePercent || 0
+      }
+    };
+
+    // System Overview Section
+    checkNewPage(60);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    yPosition = addText('System Overview', margin, yPosition);
+    yPosition += 5;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addText(`Total Users: ${reportData.systemOverview.totalUsers}`, margin, yPosition);
+    yPosition = addText(`Active Users: ${reportData.systemOverview.activeUsers}`, margin, yPosition);
+    yPosition = addText(`New Users (24h): ${reportData.systemOverview.newUsers}`, margin, yPosition);
+    yPosition = addText(`User Growth: ${reportData.systemOverview.userGrowth}%`, margin, yPosition);
+    yPosition = addText(`System Health: ${reportData.systemOverview.systemHealth}%`, margin, yPosition);
+    yPosition += 10;
+
+    // Invitation Statistics Section
+    checkNewPage(60);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    yPosition = addText('Invitation Statistics', margin, yPosition);
+    yPosition += 5;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addText(`Total Invitations: ${reportData.invitations.total}`, margin, yPosition);
+    yPosition = addText(`Active Invitations: ${reportData.invitations.active}`, margin, yPosition);
+    yPosition = addText(`Archived Invitations: ${reportData.invitations.archived}`, margin, yPosition);
+    yPosition = addText(`Expired Invitations: ${reportData.invitations.expired}`, margin, yPosition);
+    yPosition = addText(`Overdue Invitations: ${reportData.invitations.overdue}`, margin, yPosition);
+    yPosition = addText(`This Week: ${reportData.invitations.thisWeek}`, margin, yPosition);
+    yPosition = addText(`This Month: ${reportData.invitations.thisMonth}`, margin, yPosition);
+    yPosition += 10;
+
+    // Budget Overview Section
+    checkNewPage(50);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    yPosition = addText('Budget Overview', margin, yPosition);
+    yPosition += 5;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    yPosition = addText(`Total Budget: ₱${reportData.budget.totalBudget.toLocaleString()}`, margin, yPosition);
+    yPosition = addText(`Total Spent: ₱${reportData.budget.totalSpent.toLocaleString()}`, margin, yPosition);
+    yPosition = addText(`Remaining Budget: ₱${reportData.budget.remaining.toLocaleString()}`, margin, yPosition);
+    yPosition = addText(`Budget Usage: ${reportData.budget.usagePercent}%`, margin, yPosition);
+    yPosition += 10;
+
+    // Try to fetch additional data (but don't fail if it doesn't work)
+    try {
+      const [usersSnapshot, invitationsSnapshot, logsSnapshot] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'invitations')),
+        getDocs(query(collection(db, 'system_logs'), orderBy('timestamp', 'desc'), limit(10)))
+      ]);
+
+      // User Details Section (Top 10)
+      if (usersSnapshot && usersSnapshot.docs.length > 0) {
+        checkNewPage(80);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        yPosition = addText('Recent Users (Top 10)', margin, yPosition);
+        yPosition += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        let userCount = 0;
+        usersSnapshot.docs.forEach(userDoc => {
+          if (userCount >= 10) return;
+          checkNewPage(15);
+          
+          const userData = userDoc.data();
+          const username = (userData.username || 'Unknown').substring(0, 20);
+          const email = (userData.email || 'N/A').substring(0, 30);
+          const status = userData.status || 'active';
+
+          yPosition = addText(`${userCount + 1}. ${username} - ${email} (${status})`, margin, yPosition);
+          userCount++;
+        });
+        yPosition += 10;
+      }
+
+      // Recent Invitations
+      if (invitationsSnapshot && invitationsSnapshot.docs.length > 0) {
+        checkNewPage(80);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        yPosition = addText('Recent Invitations (Top 10)', margin, yPosition);
+        yPosition += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        let invCount = 0;
+        invitationsSnapshot.docs.forEach(invDoc => {
+          if (invCount >= 10) return;
+          checkNewPage(15);
+          
+          const invData = invDoc.data();
+          const title = (invData.projectTitle || 'Untitled').substring(0, 30);
+          const status = invData.status || 'Unknown';
+          const budget = Number(invData.approvedBudget || 0).toLocaleString();
+
+          yPosition = addText(`${invCount + 1}. ${title} - ${status} (₱${budget})`, margin, yPosition);
+          invCount++;
+        });
+        yPosition += 10;
+      }
+
+      // Recent System Logs
+      if (logsSnapshot && logsSnapshot.docs.length > 0) {
+        checkNewPage(80);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        yPosition = addText('Recent System Logs', margin, yPosition);
+        yPosition += 10;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        let logCount = 0;
+        logsSnapshot.docs.forEach(logDoc => {
+          if (logCount >= 10) return;
+          checkNewPage(15);
+          
+          const logData = logDoc.data();
+          const type = (logData.type || 'info').toUpperCase();
+          const message = (logData.message || 'No message').substring(0, 50);
+
+          yPosition = addText(`${logCount + 1}. [${type}] ${message}`, margin, yPosition);
+          logCount++;
+        });
+      }
+    } catch (dataError) {
+      console.warn('Could not fetch detailed data:', dataError);
+      // Continue with basic report
+    }
+
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Page ${i} of ${totalPages}`, pageWidth - 30, pageHeight - 10);
+      doc.text('Generated by GovProcure Admin System', margin, pageHeight - 10);
+    }
+
+    // Save the PDF
+    const fileName = `GovProcure_Admin_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+
+    // Show success message
+    alert('Admin report PDF generated and downloaded successfully!');
+
+    // Reset button
+    button.textContent = originalText;
+    button.disabled = false;
+
+  } catch (error) {
+    console.error('Error generating PDF report:', error);
+    alert(`Error generating PDF report: ${error.message}. Please try again.`);
+    
+    // Reset button on error
+    if (event && event.target) {
+      event.target.textContent = 'Generate Report';
+      event.target.disabled = false;
+    }
+  }
 };
 
 const showMaintenanceModal = () => {
@@ -537,280 +1730,464 @@ const navigateTo = (route) => {
   router.push(`/${route}`);
 };
 
+// Supplier Behavior Prediction Functions
+const generatePredictions = async () => {
+  generatingPredictions.value = true;
+  
+  try {
+    console.log('Generating supplier behavior predictions...');
+    
+    // Fetch data from multiple collections for analysis
+    const [usersSnapshot, contractsSnapshot, bidsSnapshot, qualificationsSnapshot] = await Promise.all([
+      getDocs(collection(db, 'users')),
+      getDocs(collection(db, 'contracts')),
+      getDocs(collection(db, 'bids')),
+      getDocs(collection(db, 'qualifications')) // Add qualifications data
+    ]);
+
+    const supplierData = [];
+    
+    // Analyze user data (suppliers)
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      if (userData.role === 'supplier' || userData.userType === 'supplier') {
+        supplierData.push({
+          id: doc.id,
+          name: userData.username || userData.name || 'Unknown',
+          email: userData.email,
+          createdAt: userData.createdAt,
+          lastActive: userData.lastLogin || userData.lastActive,
+          status: userData.status || 'active',
+          contracts: [],
+          bids: [],
+          qualifications: [] // Add qualifications array
+        });
+      }
+    });
+
+    // Analyze contracts for performance history
+    contractsSnapshot.forEach(doc => {
+      const contractData = doc.data();
+      const supplier = supplierData.find(s => 
+        s.id === contractData.supplierId || 
+        s.email === contractData.supplierEmail ||
+        s.name === contractData.supplierName
+      );
+      
+      if (supplier) {
+        supplier.contracts.push({
+          id: doc.id,
+          status: contractData.status,
+          completedOnTime: contractData.completedOnTime,
+          deliveryDate: contractData.deliveryDate,
+          expectedDate: contractData.expectedDeliveryDate,
+          budget: contractData.budget || contractData.amount,
+          quality: contractData.qualityRating || Math.random() * 5, // Simulated if not available
+          ...contractData
+        });
+      }
+    });
+
+    // Analyze bids for behavior patterns
+    bidsSnapshot.forEach(doc => {
+      const bidData = doc.data();
+      const supplier = supplierData.find(s => 
+        s.id === bidData.bidderId || 
+        s.email === bidData.bidderEmail
+      );
+      
+      if (supplier) {
+        supplier.bids.push({
+          id: doc.id,
+          status: bidData.status,
+          submittedOnTime: bidData.submittedOnTime,
+          bidAmount: bidData.bidAmount,
+          awarded: bidData.status === 'awarded',
+          ...bidData
+        });
+      }
+    });
+
+    // Analyze post-qualifications for evaluation history
+    qualificationsSnapshot.forEach(doc => {
+      const qualData = doc.data();
+      let supplier = supplierData.find(s => 
+        s.name.toLowerCase() === qualData.supplierName?.toLowerCase() ||
+        s.email === qualData.supplierEmail
+      );
+      
+      // If no matching user found, create a supplier entry from qualification data
+      if (!supplier && qualData.supplierName) {
+        supplier = {
+          id: `qual-${doc.id}`,
+          name: qualData.supplierName,
+          email: qualData.supplierEmail || 'unknown@email.com',
+          createdAt: qualData.createdAt || qualData.evaluationDate,
+          lastActive: qualData.updatedAt || qualData.createdAt,
+          status: 'active',
+          contracts: [],
+          bids: [],
+          qualifications: []
+        };
+        supplierData.push(supplier);
+      }
+      
+      if (supplier) {
+        supplier.qualifications.push({
+          id: doc.id,
+          evaluationScore: qualData.evaluationScore,
+          remarks: qualData.remarks,
+          evaluationDate: qualData.evaluationDate,
+          evaluator: qualData.evaluator,
+          ...qualData
+        });
+      }
+    });
+
+    // AI-like prediction algorithm
+    const predictions = supplierData.map(supplier => {
+      const performanceScore = calculatePerformanceScore(supplier);
+      const reliabilityScore = calculateReliabilityScore(supplier);
+      const riskLevel = calculateRiskLevel(supplier, performanceScore, reliabilityScore);
+      
+      return {
+        ...supplier,
+        performanceScore,
+        reliabilityScore,
+        riskLevel,
+        predictedBehavior: generateBehaviorPrediction(supplier, performanceScore, reliabilityScore)
+      };
+    });
+
+    // Categorize suppliers by risk
+    const highRisk = predictions.filter(p => p.riskLevel > 70).length;
+    const mediumRisk = predictions.filter(p => p.riskLevel >= 30 && p.riskLevel <= 70).length;
+    const lowRisk = predictions.filter(p => p.riskLevel < 30).length;
+    
+    const averageReliability = predictions.length > 0 
+      ? Math.round(predictions.reduce((sum, p) => sum + p.reliabilityScore, 0) / predictions.length)
+      : 0;
+    
+    const predictedDelays = predictions.filter(p => p.predictedBehavior.likelyToDelay).length;
+
+    // Generate AI recommendations
+    const recommendations = generateRecommendations(predictions);
+
+    // Update prediction data
+    supplierPredictions.value = {
+      totalSuppliers: predictions.length,
+      highRisk,
+      mediumRisk,
+      lowRisk,
+      averageReliability,
+      predictedDelays,
+      recommendations
+    };
+
+    // Update chart data with monthly predictions
+    updatePredictionChart(predictions);
+
+    console.log('✅ Predictions generated successfully');
+    alert(`🤖 AI Analysis Complete!\n\nAnalyzed ${predictions.length} suppliers:\n• High Risk: ${highRisk}\n• Medium Risk: ${mediumRisk}\n• Low Risk: ${lowRisk}\n\nAverage Reliability: ${averageReliability}%\nPredicted Delays: ${predictedDelays}`);
+
+  } catch (error) {
+    console.error('Error generating predictions:', error);
+    alert('❌ Error generating predictions. Please try again.');
+  } finally {
+    generatingPredictions.value = false;
+  }
+};
+
+// Helper function to calculate performance score
+const calculatePerformanceScore = (supplier) => {
+  if (supplier.contracts.length === 0 && supplier.qualifications.length === 0) return 50; // Neutral score for new suppliers
+  
+  let score = 0;
+  let totalWeight = 0;
+  
+  // Contract performance
+  supplier.contracts.forEach(contract => {
+    let contractScore = 50; // Base score
+    
+    // On-time delivery bonus/penalty
+    if (contract.completedOnTime === true) contractScore += 25;
+    else if (contract.completedOnTime === false) contractScore -= 25;
+    
+    // Quality rating influence
+    if (contract.quality) {
+      contractScore += (contract.quality - 2.5) * 10; // Scale 0-5 to -25 to +25
+    }
+    
+    // Budget adherence (simulated)
+    const budgetAdherence = Math.random() > 0.7 ? 15 : -10;
+    contractScore += budgetAdherence;
+    
+    score += Math.max(0, Math.min(100, contractScore));
+    totalWeight += 1;
+  });
+  
+  // Post-qualification scores (weighted heavily as they reflect actual performance)
+  supplier.qualifications.forEach(qualification => {
+    const qualScore = Number(qualification.evaluationScore || 0);
+    // Weight post-qualification scores as 1.5x since they're actual evaluations
+    score += qualScore * 1.5;
+    totalWeight += 1.5;
+  });
+  
+  return totalWeight > 0 ? Math.round(score / totalWeight) : 50;
+};
+
+// Helper function to calculate reliability score
+const calculateReliabilityScore = (supplier) => {
+  let reliabilityFactors = [];
+  
+  // Account registration age (older = more reliable)
+  if (supplier.createdAt) {
+    const accountAge = (Date.now() - (supplier.createdAt.seconds ? supplier.createdAt.seconds * 1000 : new Date(supplier.createdAt).getTime())) / (1000 * 60 * 60 * 24 * 30);
+    reliabilityFactors.push(Math.min(accountAge * 2, 20)); // Max 20 points for age
+  }
+  
+  // Bid submission consistency
+  const totalBids = supplier.bids.length;
+  const onTimeBids = supplier.bids.filter(bid => bid.submittedOnTime !== false).length;
+  if (totalBids > 0) {
+    reliabilityFactors.push((onTimeBids / totalBids) * 30); // Max 30 points
+  }
+  
+  // Contract completion rate
+  const completedContracts = supplier.contracts.filter(c => c.status === 'completed').length;
+  if (supplier.contracts.length > 0) {
+    reliabilityFactors.push((completedContracts / supplier.contracts.length) * 25); // Max 25 points
+  }
+  
+  // Post-qualification score consistency (new factor)
+  if (supplier.qualifications.length > 0) {
+    const avgQualScore = supplier.qualifications.reduce((sum, qual) => sum + Number(qual.evaluationScore || 0), 0) / supplier.qualifications.length;
+    const qualScoreVariance = supplier.qualifications.reduce((sum, qual) => {
+      const diff = Number(qual.evaluationScore || 0) - avgQualScore;
+      return sum + (diff * diff);
+    }, 0) / supplier.qualifications.length;
+    
+    // Lower variance = higher reliability (max 20 points)
+    const consistencyScore = Math.max(0, 20 - (qualScoreVariance / 10));
+    reliabilityFactors.push(consistencyScore);
+  }
+  
+  // Recent activity
+  if (supplier.lastActive) {
+    const daysSinceActive = (Date.now() - (supplier.lastActive.seconds ? supplier.lastActive.seconds * 1000 : new Date(supplier.lastActive).getTime())) / (1000 * 60 * 60 * 24);
+    const activityScore = Math.max(0, 25 - daysSinceActive); // Decrease score with inactivity
+    reliabilityFactors.push(activityScore);
+  }
+  
+  const baseScore = reliabilityFactors.length > 0 
+    ? reliabilityFactors.reduce((sum, factor) => sum + factor, 0) / reliabilityFactors.length * 4
+    : 50;
+  
+  return Math.max(0, Math.min(100, Math.round(baseScore)));
+};
+
+// Helper function to calculate risk level
+const calculateRiskLevel = (supplier, performanceScore, reliabilityScore) => {
+  const avgScore = (performanceScore + reliabilityScore) / 2;
+  
+  // Invert the score - lower performance/reliability = higher risk
+  let riskLevel = 100 - avgScore;
+  
+  // Additional risk factors
+  const contractFailures = supplier.contracts.filter(c => c.status === 'cancelled' || c.status === 'failed').length;
+  const totalContracts = supplier.contracts.length;
+  
+  if (totalContracts > 0) {
+    const failureRate = contractFailures / totalContracts;
+    riskLevel += failureRate * 30; // Increase risk based on failure rate
+  }
+  
+  // Post-qualification low scores increase risk
+  const lowQualScores = supplier.qualifications.filter(q => Number(q.evaluationScore || 0) < 50).length;
+  const totalQualifications = supplier.qualifications.length;
+  
+  if (totalQualifications > 0) {
+    const lowScoreRate = lowQualScores / totalQualifications;
+    riskLevel += lowScoreRate * 25; // Increase risk based on poor evaluations
+  }
+  
+  // New supplier risk adjustment
+  if (supplier.contracts.length === 0 && supplier.bids.length === 0 && supplier.qualifications.length === 0) {
+    riskLevel += 20; // New suppliers have higher risk
+  }
+  
+  return Math.max(0, Math.min(100, Math.round(riskLevel)));
+};
+
+// Helper function to generate behavior prediction
+const generateBehaviorPrediction = (supplier, performanceScore, reliabilityScore) => {
+  const avgScore = (performanceScore + reliabilityScore) / 2;
+  
+  // Get average post-qualification score for additional insights
+  const avgQualScore = supplier.qualifications.length > 0 
+    ? supplier.qualifications.reduce((sum, qual) => sum + Number(qual.evaluationScore || 0), 0) / supplier.qualifications.length
+    : avgScore;
+  
+  return {
+    likelyToDelay: avgScore < 60 || avgQualScore < 60,
+    qualityLevel: avgQualScore > 80 ? 'high' : avgQualScore > 60 ? 'medium' : 'low',
+    communicationRating: avgScore > 70 ? 'good' : avgScore > 50 ? 'average' : 'poor',
+    recommendedActions: avgScore < 50 || avgQualScore < 50 ? ['monitor_closely', 'require_guarantees'] : 
+                       avgScore < 70 ? ['regular_checkins'] : ['preferred_supplier'],
+    trustScore: Math.round((avgScore + avgQualScore) / 2),
+    postQualificationAverage: Math.round(avgQualScore),
+    evaluationCount: supplier.qualifications.length
+  };
+};
+
+// Helper function to generate AI recommendations
+const generateRecommendations = (predictions) => {
+  const recommendations = [];
+  
+  const highRiskSuppliers = predictions.filter(p => p.riskLevel > 70);
+  const lowPerformers = predictions.filter(p => p.performanceScore < 50);
+  const newSuppliers = predictions.filter(p => p.contracts.length === 0 && p.qualifications.length === 0);
+  const poorQualifications = predictions.filter(p => 
+    p.qualifications.length > 0 && 
+    p.qualifications.reduce((sum, q) => sum + Number(q.evaluationScore || 0), 0) / p.qualifications.length < 50
+  );
+  
+  if (highRiskSuppliers.length > 0) {
+    recommendations.push({
+      priority: 'high',
+      title: 'High Risk Suppliers Detected',
+      description: `${highRiskSuppliers.length} suppliers have been flagged as high risk based on performance history and post-qualification scores.`,
+      action: 'Review these suppliers immediately and consider requiring additional guarantees or closer monitoring.'
+    });
+  }
+  
+  if (poorQualifications.length > 0) {
+    recommendations.push({
+      priority: 'high',
+      title: 'Poor Post-Qualification Performance',
+      description: `${poorQualifications.length} suppliers have consistently low post-qualification evaluation scores.`,
+      action: 'Consider providing additional training or removing from preferred supplier list.'
+    });
+  }
+  
+  if (lowPerformers.length > 0) {
+    recommendations.push({
+      priority: 'medium',
+      title: 'Performance Improvement Needed',
+      description: `${lowPerformers.length} suppliers have below-average performance scores.`,
+      action: 'Provide feedback and support to help these suppliers improve their performance.'
+    });
+  }
+  
+  if (newSuppliers.length > 0) {
+    recommendations.push({
+      priority: 'low',
+      title: 'New Supplier Onboarding',
+      description: `${newSuppliers.length} new suppliers have no contract history.`,
+      action: 'Implement thorough vetting process and start with smaller contracts to evaluate performance.'
+    });
+  }
+  
+  const reliableSuppliers = predictions.filter(p => p.riskLevel < 30 && p.performanceScore > 80);
+  if (reliableSuppliers.length > 0) {
+    recommendations.push({
+      priority: 'low',
+      title: 'Preferred Supplier Program',
+      description: `${reliableSuppliers.length} suppliers show excellent reliability and performance.`,
+      action: 'Consider offering these suppliers preferred status with benefits like priority consideration for new contracts.'
+    });
+  }
+  
+  return recommendations;
+};
+
+// Helper function to update prediction chart
+const updatePredictionChart = (predictions) => {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const performanceData = [];
+  const riskData = [];
+  
+  // Generate trend data (simulated monthly progression)
+  months.forEach(() => {
+    const avgPerformance = predictions.length > 0 
+      ? predictions.reduce((sum, p) => sum + p.performanceScore, 0) / predictions.length
+      : 50;
+    
+    const avgRisk = predictions.length > 0 
+      ? predictions.reduce((sum, p) => sum + p.riskLevel, 0) / predictions.length
+      : 50;
+    
+    // Add some variation to show trends
+    const performanceVariation = (Math.random() - 0.5) * 10;
+    const riskVariation = (Math.random() - 0.5) * 10;
+    
+    performanceData.push(Math.max(0, Math.min(100, avgPerformance + performanceVariation)));
+    riskData.push(Math.max(0, Math.min(100, avgRisk + riskVariation)));
+  });
+  
+  predictionData.value = {
+    labels: months,
+    datasets: [{
+      label: 'Predicted Performance Score',
+      data: performanceData,
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      tension: 0.4,
+      fill: true
+    }, {
+      label: 'Risk Level',
+      data: riskData,
+      borderColor: '#ef4444',
+      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      tension: 0.4,
+      fill: true
+    }]
+  };
+};
+
 </script>
 
 <style scoped>
 .app-container {
   display: flex;
   min-height: 100vh;
-}
-.main-content {
-  flex: 1;
-  transition: margin-left 0.3s;
-}
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-}
-.main-content {
-  flex: 1;
-  transition: margin-left 0.3s;
-  margin-left: 250px; /* default sidebar width */
-}
-.main-content.expanded {
-  margin-left: 0;
-}
-.modal-content h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 12px;
-}
-.modal-content p {
-  font-size: 1.1rem;
-  color: #2d3748;
-  margin-bottom: 18px;
-}
-.modal-btn {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-.modal-content {
-  background: #fff;
-  padding: 32px 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
-  text-align: center;
-  min-width: 300px;
-}
-.modal-actions {
-  margin-top: 24px;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-}
-.modal-btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.modal-btn.confirm {
-  background: #e53e3e;
-  color: #fff;
-}
-.modal-btn.confirm:hover {
-  background: #c53030;
-}
-.modal-btn.cancel {
-  background: #edf2f7;
-  color: #2d3748;
-}
-.modal-btn.cancel:hover {
-  background: #e2e8f0;
-}
-/* Admin Layout */
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  position: relative;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  width: 280px;
-  background: linear-gradient(180deg, #0f2942 0%, #102a42 100%);
-  color: white;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
-  z-index: 100;
-  transition: all 0.3s ease;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.sidebar-logo-img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
-.sidebar-logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-}
-
-.sidebar-user {
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-user-avatar img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-user-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-user-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.sidebar-user-role {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-.sidebar-nav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 0;
-}
-
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sidebar-menu-item {
-  margin-bottom: 5px;
-}
-
-.sidebar-menu-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.2s;
-  border-left: 3px solid transparent;
-}
-
-.sidebar-menu-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.sidebar-menu-link.active {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
-  border-left: 3px solid #3b82f6;
-}
-
-.sidebar-menu-link svg {
-  opacity: 0.8;
-}
-
-.sidebar-menu-link.active svg {
-  opacity: 1;
-}
-
-.sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   width: 100%;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.sidebar-logout-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Main Content Area */
 .main-content {
   flex: 1;
-  margin-left: 280px;
   padding: 20px;
   min-height: 100vh;
   position: relative;
 }
 
-/* Background Pattern */
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+}
+
+/* Remove or comment out these conflicting styles */
+/* .main-content.expanded {
+  margin-left: 0;
+} */
+
 .background-pattern {
   position: fixed;
   inset: 0;
   background-color: #1a1a2e;
   z-index: -1;
   overflow: hidden;
-  margin-left: 280px; /* Match sidebar width */
-}
-
-.pattern-overlay {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(30deg, rgba(16, 42, 66, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(16, 42, 66, 0.5) 87.5%, rgba(16, 42, 66, 0.5)),
-    linear-gradient(150deg, rgba(16, 42, 66, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(16, 42, 66, 0.5) 87.5%, rgba(16, 42, 66, 0.5)),
-    linear-gradient(30deg, rgba(16, 42, 66, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(16, 42, 66, 0.5) 87.5%, rgba(16, 42, 66, 0.5)),
-    linear-gradient(150deg, rgba(16, 42, 66, 0.5) 12%, transparent 12.5%, transparent 87%, rgba(16, 42, 66, 0.5) 87.5%, rgba(16, 42, 66, 0.5)),
-    linear-gradient(60deg, rgba(0, 0, 0, 0.1) 25%, transparent 25.5%, transparent 75%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0.1)),
-    linear-gradient(60deg, rgba(0, 0, 0, 0.1) 25%, transparent 25.5%, transparent 75%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0.1));
-  background-size: 80px 140px;
-  background-position: 0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
-  opacity: 0.2;
+  transition: margin-left 0.3s ease; /* Add transition */
 }
 
 /* Card Design */
 .admin-card {
   width: 100%;
   max-width: 1200px;
+  margin: 0 auto;  /* Center the card */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -931,29 +2308,29 @@ const navigateTo = (route) => {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
   background-color: #f8fafc;
   border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 14px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .stat-icon.users {
@@ -982,14 +2359,16 @@ const navigateTo = (route) => {
 
 .stat-value {
   color: #333;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   display: block;
+  line-height: 1.2;
 }
 
 .stat-label {
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
 .stat-change {
@@ -1033,6 +2412,342 @@ const navigateTo = (route) => {
 
 .health-indicator.poor {
   background-color: #e53e3e;
+}
+
+/* Charts Section */
+.charts-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.section-title svg {
+  color: #0f2942;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.chart-card {
+  background-color: #f8fafc;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-header h3 {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.chart-select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: white;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.chart-container {
+  height: 300px;
+  position: relative;
+}
+
+/* Prediction Button Styles */
+.prediction-btn {
+  padding: 6px 12px;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  background-color: #10b981;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.prediction-btn:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.prediction-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Prediction Section Styles */
+.prediction-section {
+  margin-bottom: 30px;
+}
+
+.prediction-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.prediction-card {
+  background-color: #f8fafc;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.prediction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prediction-card.high-risk {
+  border-left: 4px solid #ef4444;
+}
+
+.prediction-card.medium-risk {
+  border-left: 4px solid #f59e0b;
+}
+
+.prediction-card.low-risk {
+  border-left: 4px solid #10b981;
+}
+
+.prediction-card.summary {
+  border-left: 4px solid #3b82f6;
+}
+
+.prediction-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.risk-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.risk-icon.high {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.risk-icon.medium {
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.risk-icon.low {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.risk-icon.summary {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.prediction-header h3 {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.prediction-content {
+  text-align: center;
+}
+
+.risk-count {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.high-risk .risk-count {
+  color: #ef4444;
+}
+
+.medium-risk .risk-count {
+  color: #f59e0b;
+}
+
+.low-risk .risk-count {
+  color: #10b981;
+}
+
+.summary .risk-count {
+  color: #3b82f6;
+}
+
+.risk-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.risk-actions {
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.high-risk .recommendation {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.medium-risk .recommendation {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.low-risk .recommendation {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.stat-item .stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.stat-item .stat-value {
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Recommendations Section */
+.recommendations-section {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #eee;
+}
+
+.recommendations-title {
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s;
+}
+
+.recommendation-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recommendation-item.high {
+  border-left: 4px solid #ef4444;
+}
+
+.recommendation-item.medium {
+  border-left: 4px solid #f59e0b;
+}
+
+.recommendation-item.low {
+  border-left: 4px solid #10b981;
+}
+
+.recommendation-icon {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.recommendation-content {
+  flex: 1;
+}
+
+.recommendation-title {
+  color: #333;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.recommendation-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.recommendation-action {
+  color: #3b82f6;
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.3;
 }
 
 /* Management Grid */
@@ -1393,11 +3108,19 @@ const navigateTo = (route) => {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
   .management-grid {
     grid-template-columns: 1fr;
   }
 
   .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .prediction-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }

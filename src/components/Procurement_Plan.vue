@@ -190,7 +190,6 @@ import { ref, computed, onMounted } from "vue";
 import { db } from "@/firebase";
 import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { useRouter } from 'vue-router';
-import { getAuth } from "firebase/auth";
 
 export default {
   components: {
@@ -199,7 +198,6 @@ export default {
   name: "ProcurementPlan",
   setup() {
     const router = useRouter();
-    const auth = getAuth();
 
     const requests = ref([]);
     const searchQuery = ref("");
@@ -207,8 +205,6 @@ export default {
     const isViewing = ref(false);
     const viewRequestData = ref({});
     const previousStatuses = ref({});
-
-    const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
 
     const toastContainer = ref(null);
 
@@ -262,12 +258,21 @@ export default {
     };
 
     const sendStatusEmailNotification = async (email, prId, newStatus) => {
+      console.log('Sending email notification:', { email, prId, newStatus }); // Debug log
       try {
-        await fetch('http://localhost:5000/send-pr-status-email', {
+        const response = await fetch('http://localhost:5000/send-pr-status-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, prNumber: prId, newStatus })
         });
+        
+        const data = await response.json();
+        console.log('Email API response:', data); // Debug log
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to send email');
+        }
+        
         showNotification(`Status email sent to ${email}!`);
       } catch (error) {
         console.error("Email notification failed:", error);
@@ -298,15 +303,20 @@ export default {
 
         newRequests.forEach(req => {
           const prevStatus = previousStatuses.value[req.id];
-
-          // Correct field name: userId
-          if (req.userId === currentUserId && prevStatus && req.status !== prevStatus) {
+          // Enhanced debug logging
+          console.log('Request data:', {
+            id: req.id,
+            userEmail: req.userEmail,
+            itemName: req.itemName,
+            currentStatus: req.status,
+            previousStatus: prevStatus
+          });
+          
+          if (req.userEmail && prevStatus && req.status !== prevStatus) {
+            console.log(`Sending email notification to ${req.userEmail} for PR ${req.id}`);
+            sendStatusEmailNotification(req.userEmail, req.id, req.status);
             showNotification(`Status for "${req.itemName}" updated to ${req.status}`, "success");
-            if (req.userEmail) {
-              sendStatusEmailNotification(req.userEmail, req.id, req.status);
-            }
           }
-
           previousStatuses.value[req.id] = req.status;
         });
 

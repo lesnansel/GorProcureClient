@@ -31,12 +31,12 @@
           <div class="section-header">GENERAL</div>
           <ul class="nav-list">
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <router-link to="/" class="nav-link">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                 </svg>
                 <span class="nav-text">Home</span>
-              </a>
+              </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/dashboard" class="nav-link">
@@ -47,12 +47,12 @@
               </router-link>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link">
+              <router-link to="/profile-display" class="nav-link">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                 </svg>
                 <span class="nav-text">Profile</span>
-              </a>
+              </router-link>
             </li>
           </ul>
         </div>
@@ -62,12 +62,12 @@
           <div class="section-header">PROCUREMENT</div>
           <ul class="nav-list">
             <li class="nav-item">
-              <a href="#" class="nav-link active">
+              <router-link to="/purchase-requests" class="nav-link active">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                 </svg>
                 <span class="nav-text">Request Purchase</span>
-              </a>
+              </router-link>
             </li>
             <li class="nav-item">
               <router-link to="/payment-tracking" class="nav-link">
@@ -78,12 +78,7 @@
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link
-                to="/approved-purchases"
-                class="nav-link"
-                exact
-                active-class="active"
-              >
+              <router-link to="/approved-purchases" class="nav-link">
                 <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                 </svg>
@@ -114,14 +109,12 @@
             <!-- Success/Error Notification -->
             <div v-if="notification.show" :class="['notification', notification.type]">
               <div class="notification-content">
-                <span v-if="notification.type === 'success'" class="notification-icon success">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                </span>
-                <span v-else class="notification-icon error">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                </span>
+                <div class="notification-icon" :class="notification.type">
+                  <svg v-if="notification.type === 'success'" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
                 <p>{{ notification.message }}</p>
-                <button class="notification-close" @click="closeNotification">
+                <button @click="closeNotification" class="notification-close">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
               </div>
@@ -137,32 +130,31 @@
             <div v-if="activeTab === 'submit'">
               <!-- Submit Purchase Request Form -->
               <form @submit.prevent="submitRequest" class="form">
+                <!-- Basic Information Section -->
                 <div class="form-section">
-                  <h2 class="section-title">Request Details</h2>
-                  
+                  <h3 class="section-title">Basic Information</h3>
                   <div class="form-row">
                     <div class="form-group">
-                      <label class="form-label" for="itemName">Item Name</label>
-                      <input 
+                      <label class="form-label" for="itemName">Item Name *</label>
+                      <input
                         id="itemName"
-                        v-model="newRequest.itemName" 
-                        type="text" 
-                        class="input-field" 
-                        placeholder="Enter item name" 
-                        required 
+                        type="text"
+                        v-model="newRequest.itemName"
+                        class="input-field"
+                        placeholder="Enter item name"
+                        :class="{ 'error': validationErrors.itemName }"
                       />
                       <span v-if="validationErrors.itemName" class="error-message">{{ validationErrors.itemName }}</span>
                     </div>
                     <div class="form-group">
-                      <label class="form-label" for="quantity">Quantity</label>
-                      <input 
+                      <label class="form-label" for="quantity">Quantity *</label>
+                      <input
                         id="quantity"
-                        v-model.number="newRequest.quantity" 
-                        type="number" 
+                        type="number"
+                        v-model="newRequest.quantity"
+                        class="input-field"
                         min="1"
-                        class="input-field" 
-                        placeholder="Enter quantity" 
-                        required 
+                        :class="{ 'error': validationErrors.quantity }"
                       />
                       <span v-if="validationErrors.quantity" class="error-message">{{ validationErrors.quantity }}</span>
                     </div>
@@ -170,14 +162,14 @@
                   
                   <div class="form-row">
                     <div class="form-group">
-                      <label class="form-label" for="category">Category</label>
-                      <select 
+                      <label class="form-label" for="category">Category *</label>
+                      <select
                         id="category"
-                        v-model="newRequest.category" 
-                        class="input-field" 
-                        required
+                        v-model="newRequest.category"
+                        class="input-field"
+                        :class="{ 'error': validationErrors.category }"
                       >
-                        <option value="" disabled>Select a category</option>
+                        <option value="">Select a category</option>
                         <option v-for="category in categories" :key="category" :value="category">
                           {{ category }}
                         </option>
@@ -185,97 +177,98 @@
                       <span v-if="validationErrors.category" class="error-message">{{ validationErrors.category }}</span>
                     </div>
                     <div class="form-group">
-                      <label class="form-label" for="priority">Priority</label>
-                      <select 
+                      <label class="form-label" for="priority">Priority *</label>
+                      <select
                         id="priority"
-                        v-model="newRequest.priority" 
-                        class="input-field" 
-                        required
+                        v-model="newRequest.priority"
+                        class="input-field"
+                        :class="{ 'error': validationErrors.priority }"
                       >
-                        <option value="" disabled>Select priority</option>
+                        <option value="">Select priority</option>
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
                         <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
+                        <option value="particulars">Particulars</option>
                       </select>
                       <span v-if="validationErrors.priority" class="error-message">{{ validationErrors.priority }}</span>
                     </div>
                   </div>
-                  
-                  <div class="form-group">
-                    <label class="form-label" for="description">Description</label>
-                    <textarea 
-                      id="description"
-                      v-model="newRequest.description" 
-                      class="input-field textarea" 
-                      placeholder="Enter detailed description of the item(s)" 
-                      required
-                    ></textarea>
-                    <span v-if="validationErrors.description" class="error-message">{{ validationErrors.description }}</span>
-                  </div>
-                  
+
                   <div class="form-row">
                     <div class="form-group">
                       <label class="form-label" for="estimatedCost">Estimated Cost (₱)</label>
-                      <input 
+                      <input
                         id="estimatedCost"
-                        v-model.number="newRequest.estimatedCost" 
-                        type="number" 
-                        min="0" 
+                        type="number"
+                        v-model="newRequest.estimatedCost"
+                        class="input-field"
+                        placeholder="0.00"
                         step="0.01"
-                        class="input-field" 
-                        placeholder="Enter estimated cost" 
+                        min="0"
                       />
                     </div>
                     <div class="form-group">
-                      <label class="form-label" for="requiredDate">Required By</label>
-                      <input 
+                      <label class="form-label" for="requiredDate">Required Date *</label>
+                      <input
                         id="requiredDate"
-                        v-model="newRequest.requiredDate" 
-                        type="date" 
-                        class="input-field" 
+                        type="date"
+                        v-model="newRequest.requiredDate"
+                        class="input-field"
                         :min="minDate"
-                        required
+                        :class="{ 'error': validationErrors.requiredDate }"
                       />
                       <span v-if="validationErrors.requiredDate" class="error-message">{{ validationErrors.requiredDate }}</span>
                     </div>
                   </div>
-                  
+
                   <div class="form-group">
-                    <label class="form-label" for="justification">Justification</label>
-                    <textarea 
+                    <label class="form-label" for="description">Description *</label>
+                    <textarea
+                      id="description"
+                      v-model="newRequest.description"
+                      class="input-field textarea"
+                      placeholder="Provide a detailed description of the item..."
+                      rows="4"
+                      :class="{ 'error': validationErrors.description }"
+                    ></textarea>
+                    <span v-if="validationErrors.description" class="error-message">{{ validationErrors.description }}</span>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="justification">Justification *</label>
+                    <textarea
                       id="justification"
-                      v-model="newRequest.justification" 
-                      class="input-field textarea" 
-                      placeholder="Explain why this purchase is necessary" 
-                      required
+                      v-model="newRequest.justification"
+                      class="input-field textarea"
+                      placeholder="Explain why this purchase is necessary..."
+                      rows="3"
+                      :class="{ 'error': validationErrors.justification }"
                     ></textarea>
                     <span v-if="validationErrors.justification" class="error-message">{{ validationErrors.justification }}</span>
                   </div>
 
-                  <!-- File Upload Section -->
                   <div class="form-group">
-                    <label class="form-label" for="prDocument">PR Document (PDF)</label>
-                    <input 
+                    <label class="form-label" for="prDocument">PR Document (PDF) *</label>
+                    <input
                       id="prDocument"
                       type="file"
+                      @change="onFileChange"
                       accept="application/pdf"
                       class="input-field"
-                      @change="e => file = e.target.files[0]"
-                      required
+                      :class="{ 'error': fileError }"
                     />
                     <span v-if="fileError" class="error-message">{{ fileError }}</span>
+                    <small class="form-help">Please upload a PDF document containing the purchase request details.</small>
                   </div>
                 </div>
-                
+
+                <!-- Form Actions -->
                 <div class="form-actions">
-                  <button type="button" class="btn-secondary" @click="resetForm">Reset</button>
-                  <button 
-                    type="submit" 
-                    class="btn-primary" 
-                    :disabled="isSubmitting"
-                  >
-                    <span v-if="isSubmitting" class="spinner"></span>
+                  <button type="button" @click="resetForm" class="btn-secondary" :disabled="isSubmitting">
+                    Reset Form
+                  </button>
+                  <button type="submit" class="btn-primary" :disabled="isSubmitting">
+                    <div v-if="isSubmitting" class="spinner"></div>
                     {{ isSubmitting ? 'Submitting...' : 'Submit Request' }}
                   </button>
                 </div>
@@ -283,7 +276,249 @@
             </div>
             <div v-else>
               <!-- User's Purchase Requests List -->
-              <UserPurchaseRequests />
+              <div class="my-requests-section">
+                <!-- Header with Icon and Title -->
+                <div class="section-header">
+                  <div class="header-content">
+                    <div class="header-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                      </svg>
+                    </div>
+                    <div class="header-text">
+                      <h2>My Purchase Requests</h2>
+                      <p>View and track all your submitted purchase requests</p>
+                    </div>
+                  </div>
+                  <button @click="refreshRequests" class="refresh-button" :disabled="refreshingRequests">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotating': refreshingRequests }">
+                      <path d="M21 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                    </svg>
+                    {{ refreshingRequests ? 'Refreshing...' : 'Refresh' }}
+                  </button>
+                </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="search-filter-bar">
+                  <div class="search-container">
+                    <input 
+                      type="text" 
+                      v-model="searchQuery" 
+                      placeholder="Search by item name, ID, or description..." 
+                      class="search-input"
+                    />
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                  <div class="filter-container">
+                    <select v-model="statusFilter" class="filter-select">
+                      <option value="all">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="in-review">In Review</option>
+                    </select>
+                    <select v-model="sortBy" class="filter-select">
+                      <option value="newest">Newest First</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="name">Item Name A-Z</option>
+                      <option value="status">By Status</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="stats-summary">
+                  <div class="stat-item">
+                    <div class="stat-value">{{ totalRequests }}</div>
+                    <div class="stat-label">Total Requests</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">{{ pendingRequests }}</div>
+                    <div class="stat-label">Pending</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">{{ approvedRequests }}</div>
+                    <div class="stat-label">Approved</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value">{{ rejectedRequests }}</div>
+                    <div class="stat-label">Rejected</div>
+                  </div>
+                </div>
+
+                <!-- Purchase Requests Cards Container -->
+                <div class="requests-container">
+                  <!-- Loading State -->
+                  <div v-if="loadingRequests" class="loading-state">
+                    <div class="loading-spinner">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="loading-icon">
+                        <line x1="12" y1="2" x2="12" y2="6"></line>
+                        <line x1="12" y1="18" x2="12" y2="22"></line>
+                        <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                        <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                        <line x1="2" y1="12" x2="6" y2="12"></line>
+                        <line x1="18" y1="12" x2="22" y2="12"></line>
+                        <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                        <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+                      </svg>
+                    </div>
+                    <p>Loading your requests...</p>
+                  </div>
+
+                  <!-- Empty State -->
+                  <div v-else-if="filteredMockRequests.length === 0" class="empty-state">
+                    <div class="empty-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                      </svg>
+                    </div>
+                    <h3>No Purchase Requests Found</h3>
+                    <p>You haven't submitted any purchase requests yet. Click on "Submit Request" to get started.</p>
+                    <button @click="activeTab = 'submit'" class="create-request-btn">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      Create Your First Request
+                    </button>
+                  </div>
+
+                  <!-- Purchase Requests Grid -->
+                  <div v-else class="requests-grid">
+                    <div 
+                      v-for="request in filteredMockRequests" 
+                      :key="request.id" 
+                      class="request-card"
+                      :class="`request-${request.status.toLowerCase().replace(' ', '-')}`"
+                    >
+                      <!-- Card Header -->
+                      <div class="card-header-section">
+                        <div class="card-header-left">
+                          <div class="request-id">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                              <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            #{{ request.requestId || request.id.substring(0, 8) }}
+                          </div>
+                          <div class="request-date">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                              <line x1="16" y1="2" x2="16" y2="6"></line>
+                              <line x1="8" y1="2" x2="8" y2="6"></line>
+                              <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            {{ request.submittedDate }}
+                          </div>
+                        </div>
+                        <div class="status-badge" :class="`status-${request.status.toLowerCase().replace(' ', '-')}`">
+                          <div class="status-indicator"></div>
+                          {{ request.status }}
+                        </div>
+                      </div>
+
+                      <!-- Card Body -->
+                      <div class="card-body-section">
+                        <div class="item-info">
+                          <h3 class="item-name">{{ request.itemName }}</h3>
+                          <div class="item-details">
+                            <div class="detail-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 0 1 0 2.828l-7 7a2 2 0 0 1-2.828 0l-7-7A1.994 1.994 0 0 1 3 12V7a4 4 0 0 1 4-4z"></path>
+                              </svg>
+                              <span class="detail-label">Quantity:</span>
+                              <span class="detail-value">{{ request.quantity }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                              </svg>
+                              <span class="detail-label">Priority:</span>
+                              <span class="detail-value priority" :class="`priority-${request.priority?.toLowerCase()}`">
+                                {{ request.priority }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="item-description">
+                          <p>{{ request.description }}</p>
+                        </div>
+
+                        <!-- Progress Bar for Status -->
+                        <div class="progress-section">
+                          <div class="progress-label">Request Progress</div>
+                          <div class="progress-bar">
+                            <div 
+                              class="progress-fill" 
+                              :class="`progress-${request.status.toLowerCase().replace(' ', '-')}`"
+                              :style="{ width: getProgressWidth(request.status) }"
+                            ></div>
+                          </div>
+                          <div class="progress-steps">
+                            <div class="step" :class="{ active: true }">
+                              <div class="step-dot"></div>
+                              <span>Submitted</span>
+                            </div>
+                            <div class="step" :class="{ active: ['approved', 'rejected', 'in-review', 'particulars'].includes(request.status.toLowerCase()) }">
+                              <div class="step-dot"></div>
+                              <span>Review</span>
+                            </div>
+                            <div class="step" :class="{ active: request.status.toLowerCase() === 'approved' }">
+                              <div class="step-dot"></div>
+                              <span>Approved</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Card Footer -->
+                      <div class="card-footer-section">
+                        <div class="card-actions">
+                          <button class="action-btn view-btn" @click="viewRequestDetails(request)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            View Details
+                          </button>
+                          <button v-if="request.status.toLowerCase() === 'pending'" class="action-btn edit-btn" @click="editRequest(request)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Edit
+                          </button>
+                          <button v-if="request.status.toLowerCase() === 'approved'" class="action-btn download-btn" @click="downloadPDF(request)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                              <polyline points="7 10 12 15 17 10"></polyline>
+                              <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                          </button>
+                        </div>
+                        <div class="updated-time">
+                          Last updated: {{ request.lastUpdated }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -293,15 +528,13 @@
 </template>
 
 <script>
-import { ref, computed, reactive } from "vue";
+import { ref, computed, reactive, onMounted } from "vue";
 import { db, auth, storage } from "@/firebase";
-import { collection, addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, updateDoc, query, where, getDocs } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-import UserPurchaseRequests from "./UserPurchaseRequests.vue";
 
 export default {
   name: "PurchaseRequest",
-  components: { UserPurchaseRequests },
   setup() {
     // Form data
     const newRequest = reactive({
@@ -351,8 +584,296 @@ export default {
     const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value; };
     
     // Active tab state
-    const activeTab = ref('submit');
+    const activeTab = ref('my'); // Start with My Requests tab to show existing PRs
     
+    // New state for My Requests tab
+    const searchQuery = ref("");
+    const statusFilter = ref("all");
+    const sortBy = ref("newest");
+    const refreshingRequests = ref(false);
+    
+    // Stats for summary cards
+    const totalRequests = ref(0);
+    const pendingRequests = ref(0);
+    const approvedRequests = ref(0);
+    const rejectedRequests = ref(0);
+
+    // Add loading state for requests
+    const loadingRequests = ref(false);
+    
+    // Replace mock data with real data from Firebase
+    const mockRequests = ref([]);
+
+    // Helper function to get time ago
+    const getTimeAgo = (date) => {
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      const diffMinutes = Math.floor(diffTime / (1000 * 60));
+      
+      if (diffDays > 0) {
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      } else if (diffHours > 0) {
+        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      } else if (diffMinutes > 0) {
+        return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+      } else {
+        return 'Just now';
+      }
+    };
+
+    // Update stats when mock requests change
+    const updateStatsFromMockData = () => {
+      totalRequests.value = mockRequests.value.length;
+      pendingRequests.value = mockRequests.value.filter(r => r.status.toLowerCase() === 'pending').length;
+      approvedRequests.value = mockRequests.value.filter(r => r.status.toLowerCase() === 'approved').length;
+      rejectedRequests.value = mockRequests.value.filter(r => r.status.toLowerCase() === 'rejected').length;
+    };
+
+    // Computed property for filtered requests
+    const filteredMockRequests = computed(() => {
+      let filtered = [...mockRequests.value];
+      
+      // Apply search filter
+      if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim();
+        filtered = filtered.filter(request => 
+          request.itemName?.toLowerCase().includes(query) || 
+          request.id?.toLowerCase().includes(query) ||
+          request.requestId?.toLowerCase().includes(query) ||
+          request.description?.toLowerCase().includes(query)
+        );
+      }
+      
+      // Apply status filter
+      if (statusFilter.value !== "all") {
+        filtered = filtered.filter(request => 
+          request.status.toLowerCase() === statusFilter.value.toLowerCase()
+        );
+      }
+      
+      // Apply sorting
+      filtered.sort((a, b) => {
+        switch (sortBy.value) {
+          case "oldest":
+            return new Date(a.submittedDate) - new Date(b.submittedDate);
+          case "name":
+            return (a.itemName || "").localeCompare(b.itemName || "");
+          case "status":
+            return (a.status || "").localeCompare(b.status || "");
+          case "newest":
+          default:
+            return new Date(b.submittedDate) - new Date(a.submittedDate);
+        }
+      });
+      
+      return filtered;
+    });
+
+    // Fetch real purchase requests from Firebase
+    const fetchUserPurchaseRequests = async () => {
+      loadingRequests.value = true;
+      try {
+        const currentUser = auth.currentUser;
+        
+        if (!currentUser) {
+          console.log("No authenticated user found");
+          mockRequests.value = [];
+          updateStatsFromMockData();
+          return;
+        }
+
+        console.log("Fetching purchase requests for user:", currentUser.uid, currentUser.email);
+        
+        // Query purchase requests for the current user using both userId and userEmail
+        const q = query(
+          collection(db, "purchaseRequests"),
+          where("userId", "==", currentUser.uid)
+        );
+        
+        // Also try query by email as backup
+        const q2 = query(
+          collection(db, "purchaseRequests"),
+          where("userEmail", "==", currentUser.email)
+        );
+        
+        const [querySnapshot1, querySnapshot2] = await Promise.all([
+          getDocs(q),
+          getDocs(q2)
+        ]);
+        
+        console.log(`Query 1 (by userId) returned ${querySnapshot1.size} documents`);
+        console.log(`Query 2 (by userEmail) returned ${querySnapshot2.size} documents`);
+        
+        const requestsMap = new Map(); // Use Map to avoid duplicates
+        
+        // Process first query results
+        querySnapshot1.forEach((doc) => {
+          const data = doc.data();
+          console.log("Document from query 1:", doc.id, data);
+          
+          // Convert Firebase timestamps to readable dates
+          const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : 
+                           data.createdAt ? new Date(data.createdAt) : new Date();
+          
+          const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : 
+                           data.updatedAt ? new Date(data.updatedAt) : new Date();
+
+          requestsMap.set(doc.id, {
+            id: doc.id,
+            requestId: data.requestId || doc.id.substring(0, 8).toUpperCase(),
+            itemName: data.itemName || 'Unknown Item',
+            quantity: data.quantity || 0,
+            priority: data.priority || 'medium',
+            status: data.status || 'pending',
+            description: data.description || 'No description',
+            category: data.category || 'N/A',
+            estimatedCost: data.estimatedCost,
+            justification: data.justification,
+            prDocumentURL: data.prDocumentURL,
+            submittedDate: createdAt.toLocaleDateString(),
+            lastUpdated: getTimeAgo(updatedAt),
+            createdAt: createdAt,
+            updatedAt: updatedAt
+          });
+        });
+        
+        // Process second query results (avoiding duplicates)
+        querySnapshot2.forEach((doc) => {
+          if (!requestsMap.has(doc.id)) { // Only add if not already added
+            const data = doc.data();
+            console.log("Document from query 2 (new):", doc.id, data);
+            
+            const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : 
+                             data.createdAt ? new Date(data.createdAt) : new Date();
+            
+            const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : 
+                             data.updatedAt ? new Date(data.updatedAt) : new Date();
+
+            requestsMap.set(doc.id, {
+              id: doc.id,
+              requestId: data.requestId || doc.id.substring(0, 8).toUpperCase(),
+              itemName: data.itemName || 'Unknown Item',
+              quantity: data.quantity || 0,
+              priority: data.priority || 'medium',
+              status: data.status || 'pending',
+              description: data.description || 'No description',
+              category: data.category || 'N/A',
+              estimatedCost: data.estimatedCost,
+              justification: data.justification,
+              prDocumentURL: data.prDocumentURL,
+              submittedDate: createdAt.toLocaleDateString(),
+              lastUpdated: getTimeAgo(updatedAt),
+              createdAt: createdAt,
+              updatedAt: updatedAt
+            });
+          }
+        });
+        
+        mockRequests.value = Array.from(requestsMap.values());
+        console.log(`Total unique requests loaded: ${mockRequests.value.length}`);
+        
+        if (mockRequests.value.length === 0) {
+          console.log("No purchase requests found for this user");
+          // You can check what's actually in the database
+          const allDocsQuery = query(collection(db, "purchaseRequests"));
+          const allDocsSnapshot = await getDocs(allDocsQuery);
+          console.log(`Total documents in purchaseRequests collection: ${allDocsSnapshot.size}`);
+          
+          allDocsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            console.log("All docs - ID:", doc.id, "userId:", data.userId, "userEmail:", data.userEmail, "itemName:", data.itemName);
+          });
+        }
+        
+      } catch (error) {
+        console.error("Error fetching purchase requests:", error);
+        // Show empty state on error
+        mockRequests.value = [];
+      } finally {
+        loadingRequests.value = false;
+        updateStatsFromMockData();
+      }
+    };
+
+    // Initialize stats
+    onMounted(() => {
+      // Fetch real data when component mounts
+      fetchUserPurchaseRequests();
+    });
+
+    // Updated refresh function to fetch real data
+    const refreshRequests = async () => {
+      refreshingRequests.value = true;
+      try {
+        await fetchUserPurchaseRequests();
+      } finally {
+        refreshingRequests.value = false;
+      }
+    };
+
+    // Update stats from child component
+    const updateStats = (stats) => {
+      totalRequests.value = stats.total || 0;
+      pendingRequests.value = stats.pending || 0;
+      approvedRequests.value = stats.approved || 0;
+      rejectedRequests.value = stats.rejected || 0;
+    };
+
+    // Helper function to get progress width based on status
+    const getProgressWidth = (status) => {
+      switch (status.toLowerCase()) {
+        case 'pending': return '33%';
+        case 'in-review': case 'in review': return '66%';
+        case 'approved': return '100%';
+        case 'rejected': return '66%';
+        case 'particulars': return '50%';
+        default: return '33%';
+      }
+    };
+
+    // Action handlers
+    const viewRequestDetails = (request) => {
+      console.log('Viewing request:', request);
+      const details = `
+        ID: ${request.requestId || request.id}
+        Item: ${request.itemName}
+        Status: ${request.status}
+        Quantity: ${request.quantity}
+        Priority: ${request.priority}
+        Category: ${request.category}
+        Estimated Cost: ₱${request.estimatedCost?.toLocaleString() || 'N/A'}
+        Required Date: ${request.requiredDate || 'N/A'}
+        
+        Description: ${request.description}
+        
+        Justification: ${request.justification || 'N/A'}
+        
+        Submitted: ${request.submittedDate}
+        Last Updated: ${request.lastUpdated}
+      `;
+      alert(details);
+    };
+
+    const editRequest = (request) => {
+      console.log('Editing request:', request);
+      if (request.status.toLowerCase() === 'pending') {
+        alert(`Edit functionality for ${request.itemName} would open here.\n\nNote: Only pending requests can be edited.`);
+      } else {
+        alert('This request cannot be edited as it is no longer pending.');
+      }
+    };
+
+    const downloadPDF = (request) => {
+      console.log('Downloading PDF for:', request);
+      if (request.prDocumentURL) {
+        window.open(request.prDocumentURL, '_blank');
+      } else {
+        alert(`No PDF document available for ${request.itemName}.`);
+      }
+    };
+
     // Validate form
     const validateForm = () => {
       const errors = {};
@@ -452,12 +973,11 @@ export default {
         
         // Add document to Firestore
         const docRef = await addDoc(collection(db, "purchaseRequests"), requestData);
-        const generatedId = docRef.id; // Retrieve the generated document ID
+        const generatedId = docRef.id;
 
         // Update the document with the generated ID
         await updateDoc(docRef, { requestId: generatedId });
 
-        // Optionally, you can log or use the generated ID
         console.log("Generated Request ID:", generatedId);
         
         // Show success notification
@@ -465,6 +985,10 @@ export default {
         
         // Reset form
         resetForm();
+
+        // Refresh the list to show the new request
+        await fetchUserPurchaseRequests();
+        
       } catch (error) {
         console.error("Error submitting purchase request:", error);
         showNotification("error", "Failed to submit request. Please try again.");
@@ -533,15 +1057,39 @@ export default {
       notification,
       categories,
       minDate,
-      submitRequest,
-      resetForm,
-      closeNotification,
       file,
       fileError,
-      onFileChange,
       sidebarOpen,
       toggleSidebar,
       activeTab,
+      
+      // New returns for My Requests tab
+      searchQuery,
+      statusFilter,
+      sortBy,
+      refreshingRequests,
+      totalRequests,
+      pendingRequests,
+      approvedRequests,
+      rejectedRequests,
+      refreshRequests,
+      updateStats,
+      
+      loadingRequests,
+      mockRequests,
+      filteredMockRequests,
+      getProgressWidth,
+      viewRequestDetails,
+      editRequest,
+      downloadPDF,
+      fetchUserPurchaseRequests,
+      updateStatsFromMockData,
+      
+      // Add the functions that were missing from return
+      submitRequest,
+      resetForm,
+      closeNotification,
+      onFileChange,
     };
   }
 };
@@ -1105,38 +1653,568 @@ export default {
   color: #fff;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 240px;
-  }
+/* My Requests Section Styling */
+.my-requests-section {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-  
-  .main-content {
-    margin-left: 0;
-  }
-  
-  .background-pattern {
-    left: 0;
-  }
-  
-  .content-wrapper {
-    padding: 16px;
-  }
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .notification {
-    animation: none;
-  }
-  .spinner {
-    animation: none;
-  }
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0f2942 0%, #102a42 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.header-text h2 {
+  color: #0f2942;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.header-text p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #0f2942;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Search and Filter Bar */
+.search-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.filter-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  min-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Stats Summary */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f2942;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Requests Container */
+.requests-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  min-height: 400px;
+}
+
+/* Enhanced Purchase Requests Cards Styling */
+.requests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.request-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Status-specific card borders */
+.request-card.request-pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.request-card.request-approved {
+  border-left: 4px solid #10b981;
+}
+
+.request-card.request-rejected {
+  border-left: 4px solid #ef4444;
+}
+
+.request-card.request-in-review {
+  border-left: 4px solid #3b82f6;
+}
+
+/* Card Header */
+.card-header-section {
+  padding: 20px 20px 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.card-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-id {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.request-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+   font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-pending .status-indicator {
+  background-color: #f59e0b;
+}
+
+.status-approved {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-approved .status-indicator {
+  background-color: #10b981;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-rejected .status-indicator {
+  background-color: #ef4444;
+}
+
+.status-in-review {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-in-review .status-indicator {
+  background-color: #3b82f6;
+}
+
+/* Card Body */
+.card-body-section {
+  padding: 0 20px;
+}
+
+.item-info {
+  margin-bottom: 16px;
+}
+
+.item-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.item-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.detail-label {
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #374151;
+  font-weight: 600;
+}
+
+.priority {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.priority-particulars {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.priority-high {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-medium {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.priority-low {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.item-description {
+  margin-bottom: 20px;
+}
+
+.item-description p {
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-bottom: 20px;
+}
+
+.progress-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 6px;
+  background-color: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-pending {
+  background-color: #f59e0b;
+}
+
+.progress-in-review {
+  background-color: #3b82f6;
+}
+
+.progress-approved {
+  background-color: #10b981;
+}
+
+.progress-rejected {
+  background-color: #ef4444;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.step.active {
+  color: #374151;
+  font-weight: 500;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  transition: background-color 0.3s ease;
+}
+
+.step.active .step-dot {
+  background-color: #3b82f6;
+}
+
+/* Card Footer */
+.card-footer-section {
+  padding: 16px 20px 20px 20px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.view-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.edit-btn {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.edit-btn:hover {
+  background-color: #bfdbfe;
+}
+
+.download-btn {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.download-btn:hover {
+  background-color: #a7f3d0;
+}
+
+.updated-time {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+/* Empty State Enhancement */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background-color: white;
+  border-radius: 16px;
+  border: 2px dashed #e5e7eb;
+}
+
+.empty-icon {
+  margin-bottom: 24px;
+  opacity: 0.6;
+  color: #9ca3af;
+}
+
+/* Loading State Enhancement */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  background-color: white;
+  border-radius: 16px;
+}
+
+.loading-spinner {
+  margin-bottom: 16px;
+}
+
+.loading-icon {
+  animation: spin 2s linear infinite;
+  color: #0f2942;
 }
 </style>

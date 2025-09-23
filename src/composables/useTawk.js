@@ -6,8 +6,16 @@ let tawkInitialized = false;
 let tawkLoadTimeout = null;
 
 export function useTawk() {
-  const excludedRoutes = ['/', '/auth', '/login', '/register', '/reset-password'];
-  const shouldLoadTawk = (path) => !excludedRoutes.includes(path);
+  const excludedRoutes = ['/', '/auth', '/login', '/register', '/reset-password', '/signin', '/signup'];
+  
+  const shouldLoadTawk = (path) => {
+    const normalizedPath = path.toLowerCase();
+    const shouldLoad = !excludedRoutes.some(route => 
+      normalizedPath === route || normalizedPath.startsWith(route + '/')
+    );
+    console.log('[TAWK] Route check:', { path, shouldLoad });
+    return shouldLoad;
+  };
 
   // 🔐 Get user role from Firestore
   async function getUserRole() {
@@ -41,65 +49,82 @@ export function useTawk() {
     }
   }
 
-  // ✅ Load Tawk only if user role = "user" or "admin"
-  const loadTawk = async () => {
-  if (tawkInitialized || !auth.currentUser) return;
-
-  const role = await getUserRole();
-  if (!['user', 'admin'].includes(role)) {
-    logTawkEvent('Tawk skipped due to role restriction', { role });
-    return;
-  }
-
-  unloadTawk(); // full cleanup before loading again
-
-  tawkLoadTimeout = setTimeout(() => {
-    window.Tawk_LoadStart = new Date();
-
-    // 🔐 Ensure Tawk_API is defined BEFORE loading the widget
-    if (typeof window.Tawk_API === 'undefined') {
-      window.Tawk_API = {};
+  // ✅ Load Tawk only if user role = "user" or "admin" AND route allows it
+  const loadTawk = async (currentPath = window.location.pathname) => {
+    console.log('[TAWK] loadTawk called for path:', currentPath);
+    
+    if (!shouldLoadTawk(currentPath)) {
+      console.log('[TAWK] Route excluded, unloading if active');
+      unloadTawk();
+      return;
     }
 
-    // ✅ Patch: Predefine `onBeforeLoaded` to prevent undefined errors
-    if (typeof window.Tawk_API.onBeforeLoaded !== 'function') {
-      window.Tawk_API.onBeforeLoaded = function () {
-        console.debug('[TAWK] onBeforeLoaded hook called');
-      };
+    if (tawkInitialized || !auth.currentUser) return;
+
+    const role = await getUserRole();
+    if (!['user', 'admin'].includes(role)) {
+      logTawkEvent('Tawk skipped due to role restriction', { role });
+      return;
     }
 
-    const script = document.createElement('script');
-    script.id = 'tawk-script';
-    script.src = 'https://embed.tawk.to/688a20fc3c120119250d1490/1j1dp1mt2';
-    script.async = true;
-    script.charset = 'UTF-8';
-    script.setAttribute('crossorigin', '*');
+    unloadTawk(); // full cleanup before loading again
 
-    script.onload = () => {
-      tawkInitialized = true;
-      logTawkEvent('✅ Tawk script loaded');
+    tawkLoadTimeout = setTimeout(() => {
+      window.Tawk_LoadStart = new Date();
 
-      // Set user info (if supported)
-      if (window.Tawk_API?.setAttributes && auth.currentUser) {
-        window.Tawk_API.setAttributes({
-          name: auth.currentUser.displayName || 'Vue User',
-          email: auth.currentUser.email,
-        }, (error) => {
-          if (error) {
-            console.warn('Tawk setAttributes error:', error);
-          }
-        });
+      // 🔐 Ensure Tawk_API is defined BEFORE loading the widget
+      if (typeof window.Tawk_API === 'undefined') {
+        window.Tawk_API = {};
       }
-    };
 
-    script.onerror = () => {
-      logTawkEvent('❌ Tawk script failed to load', { src: script.src });
-    };
+      // ✅ Patch: Predefine `onBeforeLoaded` to prevent undefined errors
+      if (typeof window.Tawk_API.onBeforeLoaded !== 'function') {
+        window.Tawk_API.onBeforeLoaded = function () {
+          console.debug('[TAWK] onBeforeLoaded hook called');
+        };
+      }
 
-    document.body.appendChild(script);
-  }, 300);
-};
+      const script = document.createElement('script');
+      script.id = 'tawk-script';
+      script.src = 'https://embed.tawk.to/688a20fc3c120119250d1490/1j1dp1mt2';
+      script.async = true;
+      script.charset = 'UTF-8';
+      script.setAttribute('crossorigin', '*');
 
+      script.onload = () => {
+        tawkInitialized = true;
+        logTawkEvent('✅ Tawk script loaded');
+
+        // Set user info (if supported)
+        if (window.Tawk_API?.setAttributes && auth.currentUser) {
+          window.Tawk_API.setAttributes({
+            name: auth.currentUser.displayName || 'Vue User',
+            email: auth.currentUser.email,
+          }, (error) => {
+            if (error) {
+              console.warn('Tawk setAttributes error:', error);
+            }
+          });
+        }
+      };
+
+      script.onerror = () => {
+        logTawkEvent('❌ Tawk script failed to load', { src: script.src });
+      };
+
+      document.body.appendChild(script);
+    }, 300);
+  };
+
+
+  // Add method to force unload on excluded routes
+  const handleRouteChange = (path) => {
+    console.log('[TAWK] Route changed to:', path);
+    if (!shouldLoadTawk(path)) {
+      console.log('[TAWK] Force unloading for excluded route');
+      unloadTawk();
+    }
+  };
 
   // ❌ Unload Tawk and clean up
   const unloadTawk = () => {
@@ -150,5 +175,5 @@ export function useTawk() {
     });
   };
 
-  return { loadTawk, unloadTawk, shouldLoadTawk };
+  return { loadTawk, unloadTawk, shouldLoadTawk, handleRouteChange };
 }

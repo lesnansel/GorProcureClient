@@ -10,8 +10,10 @@
   "dependencies": {
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.5",
-    "chart.js": "^4.5.0",
+    "chart.js": "^4.4.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
     "core-js": "^3.8.3",
+    "date-fns": "^2.30.0",
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.4",
     "emailjs-com": "^3.2.0",
@@ -24,7 +26,7 @@
     "tailwind": "^4.0.0",
     "uuid": "^11.0.5",
     "vue": "^3.2.13",
-    "vue-chartjs": "^5.3.2",
+    "vue-chartjs": "^5.3.0",
     "vue-router": "^4.5.0",
     "xlsx": "^0.18.5"
   },
@@ -64,4 +66,3 @@
     "not ie 11"
   ]
 }
-

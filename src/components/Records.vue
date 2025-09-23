@@ -108,7 +108,6 @@ dayjs.extend(customParseFormat);
 import AdminNavigationBar from "./AdminNavigationBar.vue";
 // import ProcurementStatusBar from "./ProcurementStatusBar.vue";
 
-
 export default {
   name: "RecordsManagement",
   components: {
@@ -228,7 +227,6 @@ export default {
       };
       reader.readAsBinaryString(file);
     },
-
 
     // generateStatusHistory removed; now only STATUS field is used for process step
     isDateColumn(index) {

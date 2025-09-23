@@ -49,7 +49,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Supporting Document (optional)</label>
+            <label class="form-label">Supporting Document (Needed)</label>
             <div class="file-upload">
               <label class="file-label">
                 <input type="file" class="file-input" @change="handleFileUpload" />

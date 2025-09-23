@@ -88,7 +88,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Supporting Document (optional)</label>
+            <label class="form-label">Supporting Document (Needed)</label>
             <input type="file" @change="handleFileUpload" class="input-field" />
             <span v-if="fileName">Selected: {{ fileName }}</span>
             <span v-if="fileURL"><a :href="fileURL" target="_blank" class="document-link">View Uploaded</a></span>

@@ -254,42 +254,88 @@
   class="modal-overlay"
   @click="showNotificationsModal = false"
 >
-  <div class="modal-content" @click.stop>
-    <div class="modal-header">
-      <h3>Notifications</h3>
-      <button class="close-btn" @click="showNotificationsModal = false">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <div class="modal-content notifications-modal" @click.stop>
+    <div class="notifications-modal-header">
+      <div class="notifications-header-left">
+        <div class="notifications-header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+        <div class="notifications-header-text">
+          <h3>Notifications</h3>
+          <span v-if="unreadCount > 0" class="notifications-count">{{ unreadCount }} unread</span>
+        </div>
+      </div>
+      <button class="notifications-close-btn" @click="showNotificationsModal = false">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
 
-    <!-- Scrollable Body -->
-    <div class="modal-body scrollable-body">
-      <div v-if="notifications.length === 0">
-        <p>No notifications yet.</p>
+    <div class="notifications-modal-body">
+      <div v-if="notifications.length === 0" class="notifications-empty-state">
+        <div class="notifications-empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+        <div class="notifications-empty-text">
+          <h4>All caught up!</h4>
+          <p>You have no new notifications at the moment. We'll let you know when there's something important.</p>
+        </div>
       </div>
-      <div v-else>
-        <ul class="notif-list">
-          <li
-            v-for="notif in notifications"
-            :key="notif.id"
-            class="notif-item"
-            :class="{ unread: !notif.read }"
-          >
-            <div class="notif-content">
-              <span class="notif-message">{{ notif.message }}</span>
-              <span class="notif-time">{{ formatDate(notif.timestamp) }}</span>
+      <div v-else class="notifications-list">
+        <div
+          v-for="notif in notifications"
+          :key="notif.id"
+          class="notification-card"
+          :class="{ 'notification-unread': !notif.read }"
+        >
+          <div class="notification-indicator">
+            <div class="notification-status-dot" :class="{ 'dot-unread': !notif.read }"></div>
+          </div>
+          <div class="notification-icon-wrapper">
+            <div class="notification-type-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
             </div>
-            <div v-if="!notif.read" class="notif-actions">
-              <button @click="notif.read = true" class="mark-read-btn">
-                Mark as Read
-              </button>
-            </div>
-          </li>
-        </ul>
+          </div>
+          <div class="notification-content-wrapper">
+            <div class="notification-message-text">{{ notif.message }}</div>
+            <div class="notification-timestamp">{{ formatDate(notif.timestamp) }}</div>
+          </div>
+          <div v-if="!notif.read" class="notification-actions-wrapper">
+            <button @click="notif.read = true" class="notification-mark-read" title="Mark as read">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <div v-if="notifications.length > 0" class="notifications-modal-footer">
+      <button 
+        @click="notifications.forEach(n => n.read = true)" 
+        class="notifications-mark-all-read"
+        :disabled="unreadCount === 0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+        Mark all as read
+      </button>
     </div>
   </div>
 </div>
@@ -924,6 +970,7 @@ export default {
   position: relative;
   overflow: hidden;
   transition: margin-left 0.3s ease, width 0.3s ease;
+  max-width: 100%; /* Ensure it uses full available width */
 }
 
 /* When sidebar is open on larger screens, adjust main content */
@@ -961,7 +1008,7 @@ export default {
 /* Card Design */
 .dashboard-card {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1400px; /* Increased from 1000px to 1400px */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -1013,16 +1060,17 @@ export default {
 /* Stats Overview */
 .stats-overview {
   display: flex;
-  gap: 20px;
+  gap: 24px; /* Increased from 20px to 24px */
   flex-wrap: wrap;
+  justify-content: space-between; /* Better distribution */
 }
 
 .stat-item {
   flex: 1;
-  min-width: 120px;
+  min-width: 140px; /* Increased from 120px to 140px */
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 15px;
+  padding: 18px 15px; /* Increased top/bottom padding */
   text-align: center;
   backdrop-filter: blur(10px);
   transition: transform 0.2s;
@@ -1044,7 +1092,7 @@ export default {
 }
 
 .card-content {
-  padding: 30px;
+  padding: 40px; /* Increased from 30px to 40px */
 }
 
 /* Loading State */
@@ -1072,10 +1120,10 @@ export default {
 
 /* Welcome Section */
 .welcome-section {
-  margin-bottom: 32px;
+  margin-bottom: 40px; /* Increased from 32px to 40px */
   background-color: #f8fafc;
   border-radius: 12px;
-  padding: 24px;
+  padding: 32px; /* Increased from 24px to 32px */
   border: 1px solid #e2e8f0;
 }
 
@@ -1158,8 +1206,8 @@ export default {
 
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Increased from 200px to 250px */
+  gap: 20px; /* Increased gap from 16px to 20px */
 }
 
 .action-card {
@@ -1296,8 +1344,8 @@ export default {
 
 .admin-actions {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Increased from 300px to 350px */
+  gap: 20px; /* Increased gap from 16px to 20px */
 }
 
 .admin-action-card {
@@ -1475,61 +1523,385 @@ export default {
   }
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-  .card-content {
+/* Enhanced Notification Modal Styles */
+.notifications-modal {
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notifications-modal-header {
+  background: linear-gradient(135deg, #0f2942 0%, #1a4971 100%);
+  color: white;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: none;
+}
+
+.notifications-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notifications-header-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.notifications-header-icon svg {
+  color: white;
+}
+
+.notifications-header-text h3 {
+  color: white;
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.025em;
+}
+
+.notifications-count {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.025em;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.notifications-close-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.notifications-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.notifications-close-btn svg {
+  color: white;
+}
+
+.notifications-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  background: #fafbfc;
+  max-height: 60vh;
+}
+
+.notifications-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 32px;
+  text-align: center;
+}
+
+.notifications-empty-icon {
+  margin-bottom: 24px;
+  opacity: 0.4;
+}
+
+.notifications-empty-icon svg {
+  color: #94a3b8;
+}
+
+.notifications-empty-text h4 {
+  color: #1e293b;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.025em;
+}
+
+.notifications-empty-text p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0;
+}
+
+.notifications-list {
+  padding: 8px  0;
+}
+
+.notification-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notification-card:hover {
+  background: #f8fafc;
+  border-left: 4px solid #e2e8f0;
+}
+
+.notification-card:last-child {
+  border-bottom: none;
+}
+
+.notification-unread {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.02) 0%, rgba(255, 255, 255, 1) 100%);
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-unread:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.04) 0%, rgba(248, 250, 252, 1) 100%);
+  border-left: 4px solid #2563eb;
+}
+
+.notification-indicator {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.notification-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.notification-status-dot.dot-unread {
+  background: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.notification-icon-wrapper {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.notification-type-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+}
+
+.notification-unread .notification-type-icon {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.notification-type-icon svg {
+  color: #64748b;
+}
+
+.notification-unread .notification-type-icon svg {
+  color: #3b82f6;
+}
+
+.notification-content-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-message-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #334155;
+  margin-bottom: 8px;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.notification-unread .notification-message-text {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.notification-timestamp {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notification-timestamp::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: #cbd5e1;
+  border-radius: 50%;
+}
+
+.notification-actions-wrapper {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-left: 12px;
+}
+
+.notification-card:hover .notification-actions-wrapper {
+  opacity: 1;
+}
+
+.notification-mark-read {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+.notification-mark-read:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+}
+
+.notification-mark-read:active {
+  transform: scale(0.95);
+}
+
+.notifications-modal-footer {
+  background: white;
+  border-top: 1px solid #f1f5f9;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.notifications-mark-all-read {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #0f2942 0%, #1a4971 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(15, 41, 66, 0.2);
+  letter-spacing: 0.025em;
+}
+
+.notifications-mark-all-read:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 41, 66, 0.3);
+}
+
+.notifications-mark-all-read:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(15, 41, 66, 0.1);
+}
+
+.notifications-mark-all-read:active {
+  transform: translateY(0);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .notifications-modal {
+    max-width: 95vw;
+    margin: 10px;
+    max-height: 90vh;
+  }
+
+  .notifications-modal-header {
     padding: 20px;
   }
 
-  .welcome-content {
-    flex-direction: column-reverse;
-    text-align: center;
+  .notifications-header-text h3 {
+    font-size: 1.25rem;
   }
 
-  .user-avatar {
-    margin-bottom: 16px;
+  .notification-card {
+    padding: 16px 20px;
+    gap: 12px;
   }
 
-  .welcome-text {
-    font-size: 1.5rem;
+  .notification-type-icon {
+    width: 36px;
+    height: 36px;
   }
 
-  .stats-overview {
-    grid-template-columns: 1fr 1fr;
+  .notifications-empty-state {
+    padding: 40px 24px;
   }
 
-  .quick-actions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-actions {
-    grid-template-columns: 1fr;
+  .notifications-modal-footer {
+    padding: 16px 20px;
   }
 }
 
-@media (max-width: 480px) {
-  .stats-overview {
-    grid-template-columns: 1fr;
-  }
-  
-  .stat-item {
-    min-width: 100%;
-  }
+/* Smooth scrollbar for notifications */
+.notifications-modal-body::-webkit-scrollbar {
+  width: 6px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .sidebar-toggle,
-  .sidebar-overlay,
-  .dashboard-wrapper,
-  .loading-icon,
-  .modal-overlay,
-  .modal-content,
-  .action-card:hover,
-  .admin-action-card:hover {
-    transition: none;
-    animation: none;
-    transform: none;
-  }
+.notifications-modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.notifications-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.notifications-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 </style>
