@@ -260,7 +260,7 @@ export default {
     const sendStatusEmailNotification = async (email, prId, newStatus) => {
       console.log('Sending email notification:', { email, prId, newStatus }); // Debug log
       try {
-        const response = await fetch('http://localhost:5000/send-pr-status-email', {
+        const response = await fetch('https://govprocurebackend-1.onrender.com/send-pr-status-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, prNumber: prId, newStatus })
