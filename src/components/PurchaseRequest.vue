@@ -214,7 +214,6 @@
                         type="date"
                         v-model="newRequest.requiredDate"
                         class="input-field"
-                        :min="minDate"
                         :class="{ 'error': validationErrors.requiredDate }"
                       />
                       <span v-if="validationErrors.requiredDate" class="error-message">{{ validationErrors.requiredDate }}</span>
@@ -2194,7 +2193,7 @@ export default {
 .empty-icon {
   margin-bottom: 24px;
   opacity: 0.6;
-  color: #9ca3af;
+  color: #9ca3ba;
 }
 
 /* Loading State Enhancement */
