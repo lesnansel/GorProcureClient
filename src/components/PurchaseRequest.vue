@@ -248,17 +248,17 @@
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label" for="prDocument">PR Document (PDF) *</label>
+                    <label class="form-label" for="prDocument">PR Document (PDF or Image) *</label>
                     <input
                       id="prDocument"
                       type="file"
                       @change="onFileChange"
-                      accept="application/pdf"
+                      accept="application/pdf,image/*"
                       class="input-field"
                       :class="{ 'error': fileError }"
                     />
                     <span v-if="fileError" class="error-message">{{ fileError }}</span>
-                    <small class="form-help">Please upload a PDF document containing the purchase request details.</small>
+                    <small class="form-help">Please upload a PDF document or image containing the purchase request details.</small>
                   </div>
                 </div>
 
@@ -910,9 +910,9 @@ export default {
       
       // File validation
       if (!file.value) {
-        fileError.value = "Please upload a PR document (PDF).";
-      } else if (file.value && file.value.type !== "application/pdf") {
-        fileError.value = "Only PDF files are allowed.";
+        fileError.value = "Please upload a PR document (PDF or image).";
+      } else if (file.value && !(file.value.type === "application/pdf" || file.value.type.startsWith("image/"))) {
+        fileError.value = "Only PDF files and images are allowed.";
       } else {
         fileError.value = "";
       }
@@ -937,8 +937,8 @@ export default {
       });
       
       // File validation
-      if (!file.value || file.value.type !== "application/pdf") {
-        fileError.value = !file.value ? "Please upload a PR document (PDF)." : "Only PDF files are allowed.";
+      if (!file.value || !(file.value.type === "application/pdf" || file.value.type.startsWith("image/"))) {
+        fileError.value = !file.value ? "Please upload a PR document (PDF or image)." : "Only PDF files and images are allowed.";
         showNotification("error", fileError.value);
         return;
       }
@@ -1042,8 +1042,8 @@ export default {
       file.value = selectedFile || null;
       
       // Validate file type
-      if (selectedFile && selectedFile.type !== "application/pdf") {
-        fileError.value = "Only PDF files are allowed.";
+      if (selectedFile && !(selectedFile.type === "application/pdf" || selectedFile.type.startsWith("image/"))) {
+        fileError.value = "Only PDF files and images are allowed.";
         file.value = null;
       } else {
         fileError.value = "";
