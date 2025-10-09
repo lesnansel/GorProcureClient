@@ -912,6 +912,8 @@ export default {
         fileError.value = "Please upload a PR document (PDF or image).";
       } else if (file.value && !(file.value.type === "application/pdf" || file.value.type.startsWith("image/"))) {
         fileError.value = "Only PDF files and images are allowed.";
+      } else if (file.value && file.value.size > 5 * 1024 * 1024) { // 5MB file size limit
+        fileError.value = "File size exceeds 5MB limit. Please upload a smaller file.";
       } else {
         fileError.value = "";
       }
@@ -935,9 +937,17 @@ export default {
         delete validationErrors[key];
       });
       
-      // File validation
-      if (!file.value || !(file.value.type === "application/pdf" || file.value.type.startsWith("image/"))) {
-        fileError.value = !file.value ? "Please upload a PR document (PDF or image)." : "Only PDF files and images are allowed.";
+      // File validation with size check
+      if (!file.value) {
+        fileError.value = "Please upload a PR document (PDF or image).";
+        showNotification("error", fileError.value);
+        return;
+      } else if (!(file.value.type === "application/pdf" || file.value.type.startsWith("image/"))) {
+        fileError.value = "Only PDF files and images are allowed.";
+        showNotification("error", fileError.value);
+        return;
+      } else if (file.value.size > 5 * 1024 * 1024) { // 5MB file size limit
+        fileError.value = "File size exceeds 5MB limit. Please upload a smaller file.";
         showNotification("error", fileError.value);
         return;
       }
@@ -953,11 +963,41 @@ export default {
           return;
         }
         
-        // Upload file to Firebase Storage
-        const storagePath = `purchaseRequests/${currentUser.uid}/${Date.now()}_${file.value.name}`;
-        const fileStorageRef = storageRef(storage, storagePath);
-        await uploadBytes(fileStorageRef, file.value);
-        const fileURL = await getDownloadURL(fileStorageRef);
+        // Process file name to ensure it's safe for storage
+        const fileName = file.value.name.replace(/[^a-zA-Z0-9.]/g, '_');
+        const timestamp = Date.now();
+        const storagePath = `purchaseRequests/${currentUser.uid}/${timestamp}_${fileName}`;
+        
+        // Upload file to Firebase Storage with retry logic
+        let fileURL = '';
+        try {
+          const fileStorageRef = storageRef(storage, storagePath);
+          
+          // Create file metadata including content type
+          const metadata = {
+            contentType: file.value.type,
+          };
+          
+          // Upload file with metadata
+          await uploadBytes(fileStorageRef, file.value, metadata);
+          fileURL = await getDownloadURL(fileStorageRef);
+        } catch (uploadError) {
+          console.error("File upload error:", uploadError);
+          
+          // Show specific error message based on the error
+          if (uploadError.code === 'storage/unauthorized') {
+            showNotification("error", "You don't have permission to upload files. Please contact an administrator.");
+          } else if (uploadError.code === 'storage/canceled') {
+            showNotification("error", "File upload was cancelled.");
+          } else if (uploadError.code === 'storage/quota-exceeded') {
+            showNotification("error", "Storage quota exceeded. Please contact an administrator.");
+          } else {
+            showNotification("error", "Failed to upload file. Please try again with a smaller file or different format.");
+          }
+          
+          isSubmitting.value = false;
+          return;
+        }
         
         // Prepare request data
         const requestData = {
@@ -967,7 +1007,10 @@ export default {
           status: "pending",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          prDocumentURL: fileURL
+          prDocumentURL: fileURL,
+          fileName: fileName,
+          fileType: file.value.type,
+          fileSize: file.value.size,
         };
         
         // Add document to Firestore
@@ -990,7 +1033,12 @@ export default {
         
       } catch (error) {
         console.error("Error submitting purchase request:", error);
-        showNotification("error", "Failed to submit request. Please try again.");
+        // Provide more detailed error message
+        if (error.code && error.code.startsWith('storage/')) {
+          showNotification("error", `Storage error: ${error.message || 'Unknown storage error'}`);
+        } else {
+          showNotification("error", "Failed to submit request. Please try again.");
+        }
       } finally {
         isSubmitting.value = false;
       }
@@ -1040,10 +1088,17 @@ export default {
       const selectedFile = event.target.files[0];
       file.value = selectedFile || null;
       
-      // Validate file type
-      if (selectedFile && !(selectedFile.type === "application/pdf" || selectedFile.type.startsWith("image/"))) {
-        fileError.value = "Only PDF files and images are allowed.";
-        file.value = null;
+      // Validate file type and size
+      if (selectedFile) {
+        if (!(selectedFile.type === "application/pdf" || selectedFile.type.startsWith("image/"))) {
+          fileError.value = "Only PDF files and images are allowed.";
+          file.value = null;
+        } else if (selectedFile.size > 5 * 1024 * 1024) { // 5MB file size limit
+          fileError.value = "File size exceeds 5MB limit. Please upload a smaller file.";
+          file.value = null;
+        } else {
+          fileError.value = "";
+        }
       } else {
         fileError.value = "";
       }
@@ -1850,6 +1905,7 @@ export default {
 .request-card {
   background: white;
   border-radius: 16px;
+
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   border: 1px solid #e2e8f0;
   overflow: hidden;
