@@ -2017,7 +2017,6 @@ const generatePredictions = async () => {
     updatePredictionChart(predictions);
 
     console.log('✅ Predictions generated successfully');
-    alert(`🤖 AI Analysis Complete!\n\nAnalyzed ${predictions.length} suppliers:\n• High Risk: ${highRisk}\n• Medium Risk: ${mediumRisk}\n• Low Risk: ${lowRisk}\n\nAverage Reliability: ${averageReliability}%\nPredicted Delays: ${predictedDelays}`);
 
   } catch (error) {
     console.error('Error generating predictions:', error);
