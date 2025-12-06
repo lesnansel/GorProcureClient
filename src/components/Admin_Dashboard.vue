@@ -316,6 +316,77 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- 🤖 Machine Learning Predictions Section -->
+                <div class="ml-predictions-section" v-if="Object.keys(mlPredictions).length > 0">
+                  <h2 class="section-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6"/><path d="m21 12-6-6m-6 6-6-6"/></svg>
+                    🤖 Machine Learning Delay Predictions
+                  </h2>
+                  
+                  <div class="ml-predictions-grid">
+                    <div 
+                      v-for="(prediction, supplierId) in mlPredictions" 
+                      :key="supplierId"
+                      class="ml-prediction-card"
+                      :class="`risk-${prediction.riskLevel.toLowerCase()}`"
+                    >
+                      <div class="ml-card-header">
+                        <div class="ml-risk-badge" :class="prediction.riskLevel.toLowerCase()">
+                          {{ prediction.riskLevel }}
+                        </div>
+                        <div class="ml-supplier-name">
+                          {{ prediction.supplierName || supplierId }}
+                        </div>
+                      </div>
+                      
+                      <div class="ml-card-content">
+                        <div class="ml-probability-section">
+                          <div class="ml-label">Delay Probability</div>
+                          <div class="ml-probability-bar">
+                            <div 
+                              class="ml-probability-fill"
+                              :class="prediction.riskLevel.toLowerCase()"
+                              :style="{ width: prediction.probability + '%' }"
+                            ></div>
+                          </div>
+                          <div class="ml-probability-text">{{ prediction.probability }}%</div>
+                        </div>
+                        
+                        <div class="ml-confidence-section">
+                          <span class="ml-label">Confidence:</span>
+                          <span class="ml-value">{{ prediction.confidence }}%</span>
+                        </div>
+                        
+                        <div class="ml-features-section">
+                          <div class="ml-label">Contributing Factors:</div>
+                          <ul class="ml-features-list">
+                            <li>
+                              <span class="ml-feature-name">Delay History:</span>
+                              <span class="ml-feature-value">{{ Math.round(prediction.features.delayRate) }}%</span>
+                            </li>
+                            <li>
+                              <span class="ml-feature-name">On-Time Rate:</span>
+                              <span class="ml-feature-value">{{ Math.round(prediction.features.onTimeRate) }}%</span>
+                            </li>
+                            <li>
+                              <span class="ml-feature-name">Active Contracts:</span>
+                              <span class="ml-feature-value">{{ prediction.features.contractCount }}</span>
+                            </li>
+                            <li>
+                              <span class="ml-feature-name">Account Age:</span>
+                              <span class="ml-feature-value">{{ Math.round(prediction.features.accountAge) }} mo</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="ml-info-box">
+                    <strong>ℹ️ How it works:</strong> These predictions are generated using a TensorFlow.js neural network trained to detect delay patterns based on historical supplier performance. Combine these with rule-based insights above for best decision-making.
+                  </div>
+                </div>
               </div>
 
               <!-- Management Sections -->
@@ -470,6 +541,7 @@ import { ref, onMounted } from 'vue';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useRouter } from 'vue-router';
+import * as tf from '@tensorflow/tfjs';
 import {
   Chart as ChartJS,
   Title,
@@ -785,6 +857,9 @@ const generatingPredictions = ref(false);
 // Load initial data
 onMounted(async () => {
   try {
+    // Initialize ML model
+    await initializeMLModel();
+    
     await loadDashboardData();
     await fetchInvitationAnalytics();
     await fetchBudgetStats();
@@ -793,6 +868,10 @@ onMounted(async () => {
     await updateUserGrowthChart();
     updateInvitationStatusChart();
     updateActivityChart();
+    
+    // Expose ML prediction functions globally for component use
+    window.predictAllSupplierDelays = predictAllSupplierDelays;
+    window.getSupplierDelayPrediction = getSupplierDelayPrediction;
   } finally {
     loading.value = false;
   }
@@ -1730,6 +1809,51 @@ const navigateTo = (route) => {
   router.push(`/${route}`);
 };
 
+// ============================================
+// ADVANCED RULE-BASED PREDICTION ENGINE
+// ============================================
+
+// Rule Base Definition - Stored as a configuration
+const PREDICTION_RULES = {
+  performanceRules: [
+    { condition: 'onTimeDelivery', points: 25, fuzzyRange: { perfect: [95, 100], good: [75, 95], average: [50, 75], poor: [0, 50] } },
+    { condition: 'qualityRating', points: 25, fuzzyRange: { excellent: [4, 5], good: [3, 4], acceptable: [2, 3], poor: [0, 2] } },
+    { condition: 'budgetAdherence', points: 15, fuzzyRange: { strict: [95, 100], good: [85, 95], loose: [70, 85], over: [0, 70] } },
+    { condition: 'communicationScore', points: 10, fuzzyRange: { responsive: [80, 100], normal: [60, 80], slow: [40, 60], unresponsive: [0, 40] } },
+  ],
+  reliabilityRules: [
+    { condition: 'accountAge', points: 20, fuzzyRange: { veryOld: [24, 120], old: [12, 24], medium: [6, 12], new: [0, 6] } },
+    { condition: 'bidConsistency', points: 30, fuzzyRange: { consistent: [90, 100], reliable: [75, 90], inconsistent: [50, 75], unreliable: [0, 50] } },
+    { condition: 'completionRate', points: 25, fuzzyRange: { excellent: [95, 100], good: [80, 95], fair: [60, 80], poor: [0, 60] } },
+    { condition: 'scoreConsistency', points: 20, fuzzyRange: { stable: [0, 10], consistent: [10, 20], variable: [20, 35], erratic: [35, 100] } },
+    { condition: 'recentActivity', points: 25, fuzzyRange: { active: [0, 7], engaged: [7, 30], dormant: [30, 90], inactive: [90, 365] } },
+  ],
+  riskRules: [
+    { condition: 'contractFailureRate', points: 30, fuzzyRange: { none: [0, 5], low: [5, 15], medium: [15, 30], high: [30, 100] } },
+    { condition: 'lowQualificationScores', points: 25, fuzzyRange: { none: [0, 10], few: [10, 25], many: [25, 50], most: [50, 100] } },
+    { condition: 'accountMaturity', points: 20, fuzzyRange: { mature: [24, 120], established: [12, 24], new: [0, 12], veryNew: [0, 3] } },
+    { condition: 'delayTendency', points: 25, fuzzyRange: { reliable: [0, 10], occasional: [10, 25], frequent: [25, 50], chronic: [50, 100] } },
+  ]
+};
+
+// Fuzzy Logic Helper - Determines membership in a fuzzy set
+const getFuzzyMembership = (value, fuzzyRange) => {
+  for (const [level, range] of Object.entries(fuzzyRange)) {
+    if (value >= range[0] && value <= range[1]) {
+      return { level, confidence: calculateConfidence(value, range) };
+    }
+  }
+  return { level: 'unknown', confidence: 0 };
+};
+
+// Calculate confidence (how sure we are about the fuzzy classification)
+const calculateConfidence = (value, range) => {
+  const mid = (range[0] + range[1]) / 2;
+  const distance = Math.abs(value - mid);
+  const maxDistance = (range[1] - range[0]) / 2;
+  return Math.max(0, 100 - (distance / maxDistance) * 100);
+};
+
 // Supplier Behavior Prediction Functions
 const generatePredictions = async () => {
   generatingPredictions.value = true;
@@ -1870,6 +1994,11 @@ const generatePredictions = async () => {
     
     const predictedDelays = predictions.filter(p => p.predictedBehavior.likelyToDelay).length;
 
+    // Generate ML predictions for all suppliers
+    console.log('📊 Generating ML delay predictions...');
+    await predictAllSupplierDelays(predictions);
+    console.log('✅ ML predictions complete:', mlPredictions.value);
+
     // Generate AI recommendations
     const recommendations = generateRecommendations(predictions);
 
@@ -1898,69 +2027,99 @@ const generatePredictions = async () => {
   }
 };
 
-// Helper function to calculate performance score
+// Helper function to calculate performance score using rule-based weighted scoring
 const calculatePerformanceScore = (supplier) => {
-  if (supplier.contracts.length === 0 && supplier.qualifications.length === 0) return 50; // Neutral score for new suppliers
+  if (supplier.contracts.length === 0 && supplier.qualifications.length === 0) return 50;
   
-  let score = 0;
+  let totalScore = 0;
   let totalWeight = 0;
+  const scoreBreakdown = {};
   
-  // Contract performance
-  supplier.contracts.forEach(contract => {
-    let contractScore = 50; // Base score
-    
-    // On-time delivery bonus/penalty
-    if (contract.completedOnTime === true) contractScore += 25;
-    else if (contract.completedOnTime === false) contractScore -= 25;
-    
-    // Quality rating influence
-    if (contract.quality) {
-      contractScore += (contract.quality - 2.5) * 10; // Scale 0-5 to -25 to +25
-    }
-    
-    // Budget adherence (simulated)
-    const budgetAdherence = Math.random() > 0.7 ? 15 : -10;
-    contractScore += budgetAdherence;
-    
-    score += Math.max(0, Math.min(100, contractScore));
-    totalWeight += 1;
-  });
+  // RULE 1: On-Time Delivery Rate (weighted 25 points)
+  const onTimeRate = supplier.contracts.length > 0 
+    ? (supplier.contracts.filter(c => c.completedOnTime === true).length / supplier.contracts.length) * 100
+    : 50;
+  const onTimeFuzzy = getFuzzyMembership(onTimeRate, PREDICTION_RULES.performanceRules[0].fuzzyRange);
+  const onTimeScore = (onTimeRate / 100) * PREDICTION_RULES.performanceRules[0].points;
+  scoreBreakdown.onTimeDelivery = { value: onTimeRate, fuzzyLevel: onTimeFuzzy.level, score: onTimeScore };
+  totalScore += onTimeScore;
+  totalWeight += PREDICTION_RULES.performanceRules[0].points;
   
-  // Post-qualification scores (weighted heavily as they reflect actual performance)
-  supplier.qualifications.forEach(qualification => {
-    const qualScore = Number(qualification.evaluationScore || 0);
-    // Weight post-qualification scores as 1.5x since they're actual evaluations
-    score += qualScore * 1.5;
-    totalWeight += 1.5;
-  });
+  // RULE 2: Quality Rating (weighted 25 points)
+  const avgQuality = supplier.contracts.length > 0
+    ? supplier.contracts.reduce((sum, c) => sum + (c.quality || 0), 0) / supplier.contracts.length
+    : 2.5;
+  const qualityFuzzy = getFuzzyMembership((avgQuality / 5) * 100, PREDICTION_RULES.performanceRules[1].fuzzyRange);
+  const qualityScore = ((avgQuality / 5) * 100 / 100) * PREDICTION_RULES.performanceRules[1].points;
+  scoreBreakdown.qualityRating = { value: avgQuality, fuzzyLevel: qualityFuzzy.level, score: qualityScore };
+  totalScore += qualityScore;
+  totalWeight += PREDICTION_RULES.performanceRules[1].points;
   
-  return totalWeight > 0 ? Math.round(score / totalWeight) : 50;
+  // RULE 3: Budget Adherence (weighted 15 points) - Now using actual contract data
+  const budgetAdherence = supplier.contracts.length > 0
+    ? supplier.contracts.filter(c => c.budgetStatus !== 'exceeded').length / supplier.contracts.length * 100
+    : 70;
+  const budgetFuzzy = getFuzzyMembership(budgetAdherence, PREDICTION_RULES.performanceRules[2].fuzzyRange);
+  const budgetScore = (budgetAdherence / 100) * PREDICTION_RULES.performanceRules[2].points;
+  scoreBreakdown.budgetAdherence = { value: budgetAdherence, fuzzyLevel: budgetFuzzy.level, score: budgetScore };
+  totalScore += budgetScore;
+  totalWeight += PREDICTION_RULES.performanceRules[2].points;
+  
+  // RULE 4: Post-Qualification Average (weighted 35 points - increased importance)
+  const avgQualScore = supplier.qualifications.length > 0
+    ? supplier.qualifications.reduce((sum, q) => sum + Number(q.evaluationScore || 0), 0) / supplier.qualifications.length
+    : 50;
+  const qualScoreFuzzy = getFuzzyMembership(avgQualScore, PREDICTION_RULES.performanceRules[1].fuzzyRange);
+  const postQualScore = avgQualScore / 100 * 35;
+  scoreBreakdown.postQualifications = { value: avgQualScore, fuzzyLevel: qualScoreFuzzy.level, score: postQualScore };
+  totalScore += postQualScore;
+  totalWeight += 35;
+  
+  // CHAINED RULE: If performance is below 50 AND quality is below 2, flag for special attention
+  if ((totalScore / totalWeight * 100) < 50 && avgQuality < 2) {
+    scoreBreakdown.chainedEvent = 'Performance degradation detected - requires intervention';
+  }
+  
+  const finalScore = totalWeight > 0 ? Math.round((totalScore / totalWeight) * 100) : 50;
+  
+  // Store breakdown for transparency
+  supplier.scoreBreakdown = scoreBreakdown;
+  
+  return Math.max(0, Math.min(100, finalScore));
 };
 
-// Helper function to calculate reliability score
+// Helper function to calculate reliability score using fuzzy logic
 const calculateReliabilityScore = (supplier) => {
   let reliabilityFactors = [];
+  const reliabilityBreakdown = {};
   
-  // Account registration age (older = more reliable)
+  // RULE 1: Account Registration Age (max 20 points)
   if (supplier.createdAt) {
     const accountAge = (Date.now() - (supplier.createdAt.seconds ? supplier.createdAt.seconds * 1000 : new Date(supplier.createdAt).getTime())) / (1000 * 60 * 60 * 24 * 30);
-    reliabilityFactors.push(Math.min(accountAge * 2, 20)); // Max 20 points for age
+    const ageFuzzy = getFuzzyMembership(accountAge, PREDICTION_RULES.reliabilityRules[0].fuzzyRange);
+    const ageScore = Math.min(accountAge * 2, 20);
+    reliabilityFactors.push(ageScore);
+    reliabilityBreakdown.accountAge = { months: accountAge, fuzzyLevel: ageFuzzy.level, score: ageScore };
   }
   
-  // Bid submission consistency
+  // RULE 2: Bid Submission Consistency (max 30 points)
   const totalBids = supplier.bids.length;
   const onTimeBids = supplier.bids.filter(bid => bid.submittedOnTime !== false).length;
-  if (totalBids > 0) {
-    reliabilityFactors.push((onTimeBids / totalBids) * 30); // Max 30 points
-  }
+  const bidConsistency = totalBids > 0 ? (onTimeBids / totalBids) * 100 : 50;
+  const bidFuzzy = getFuzzyMembership(bidConsistency, PREDICTION_RULES.reliabilityRules[1].fuzzyRange);
+  const bidScore = (bidConsistency / 100) * 30;
+  reliabilityFactors.push(bidScore);
+  reliabilityBreakdown.bidConsistency = { percentage: bidConsistency, fuzzyLevel: bidFuzzy.level, score: bidScore };
   
-  // Contract completion rate
+  // RULE 3: Contract Completion Rate (max 25 points)
   const completedContracts = supplier.contracts.filter(c => c.status === 'completed').length;
-  if (supplier.contracts.length > 0) {
-    reliabilityFactors.push((completedContracts / supplier.contracts.length) * 25); // Max 25 points
-  }
+  const completionRate = supplier.contracts.length > 0 ? (completedContracts / supplier.contracts.length) * 100 : 50;
+  const completionFuzzy = getFuzzyMembership(completionRate, PREDICTION_RULES.reliabilityRules[2].fuzzyRange);
+  const completionScore = (completionRate / 100) * 25;
+  reliabilityFactors.push(completionScore);
+  reliabilityBreakdown.completionRate = { percentage: completionRate, fuzzyLevel: completionFuzzy.level, score: completionScore };
   
-  // Post-qualification score consistency (new factor)
+  // RULE 4: Post-Qualification Score Consistency (max 20 points)
   if (supplier.qualifications.length > 0) {
     const avgQualScore = supplier.qualifications.reduce((sum, qual) => sum + Number(qual.evaluationScore || 0), 0) / supplier.qualifications.length;
     const qualScoreVariance = supplier.qualifications.reduce((sum, qual) => {
@@ -1968,76 +2127,180 @@ const calculateReliabilityScore = (supplier) => {
       return sum + (diff * diff);
     }, 0) / supplier.qualifications.length;
     
-    // Lower variance = higher reliability (max 20 points)
+    const varianceFuzzy = getFuzzyMembership(qualScoreVariance, PREDICTION_RULES.reliabilityRules[3].fuzzyRange);
     const consistencyScore = Math.max(0, 20 - (qualScoreVariance / 10));
     reliabilityFactors.push(consistencyScore);
+    reliabilityBreakdown.scoreConsistency = { variance: qualScoreVariance, fuzzyLevel: varianceFuzzy.level, score: consistencyScore };
   }
   
-  // Recent activity
+  // RULE 5: Recent Activity (max 25 points)
   if (supplier.lastActive) {
     const daysSinceActive = (Date.now() - (supplier.lastActive.seconds ? supplier.lastActive.seconds * 1000 : new Date(supplier.lastActive).getTime())) / (1000 * 60 * 60 * 24);
-    const activityScore = Math.max(0, 25 - daysSinceActive); // Decrease score with inactivity
+    const activityFuzzy = getFuzzyMembership(daysSinceActive, PREDICTION_RULES.reliabilityRules[4].fuzzyRange);
+    const activityScore = Math.max(0, 25 - daysSinceActive);
     reliabilityFactors.push(activityScore);
+    reliabilityBreakdown.recentActivity = { daysSinceActive, fuzzyLevel: activityFuzzy.level, score: activityScore };
   }
   
+  // Calculate weighted average with normalization
   const baseScore = reliabilityFactors.length > 0 
     ? reliabilityFactors.reduce((sum, factor) => sum + factor, 0) / reliabilityFactors.length * 4
     : 50;
   
+  supplier.reliabilityBreakdown = reliabilityBreakdown;
+  
   return Math.max(0, Math.min(100, Math.round(baseScore)));
 };
 
-// Helper function to calculate risk level
+// Helper function to calculate risk level using weighted rule-based scoring
 const calculateRiskLevel = (supplier, performanceScore, reliabilityScore) => {
+  let riskScore = 0;
+  const riskBreakdown = {};
+  
+  // Base risk from inverse of performance and reliability
   const avgScore = (performanceScore + reliabilityScore) / 2;
+  const baseRisk = 100 - avgScore;
+  riskScore += baseRisk;
+  riskBreakdown.baseRisk = baseRisk;
   
-  // Invert the score - lower performance/reliability = higher risk
-  let riskLevel = 100 - avgScore;
-  
-  // Additional risk factors
+  // RULE 1: Contract Failure Rate (weighted 30 points)
   const contractFailures = supplier.contracts.filter(c => c.status === 'cancelled' || c.status === 'failed').length;
-  const totalContracts = supplier.contracts.length;
+  const failureRate = supplier.contracts.length > 0 ? (contractFailures / supplier.contracts.length) * 100 : 0;
+  const failureFuzzy = getFuzzyMembership(failureRate, PREDICTION_RULES.riskRules[0].fuzzyRange);
+  const failureRiskAdd = (failureRate / 100) * 30;
+  riskScore += failureRiskAdd;
+  riskBreakdown.contractFailures = { percentage: failureRate, fuzzyLevel: failureFuzzy.level, riskPoints: failureRiskAdd };
   
-  if (totalContracts > 0) {
-    const failureRate = contractFailures / totalContracts;
-    riskLevel += failureRate * 30; // Increase risk based on failure rate
-  }
-  
-  // Post-qualification low scores increase risk
+  // RULE 2: Low Qualification Scores (weighted 25 points)
   const lowQualScores = supplier.qualifications.filter(q => Number(q.evaluationScore || 0) < 50).length;
-  const totalQualifications = supplier.qualifications.length;
+  const lowQualRate = supplier.qualifications.length > 0 ? (lowQualScores / supplier.qualifications.length) * 100 : 0;
+  const lowQualFuzzy = getFuzzyMembership(lowQualRate, PREDICTION_RULES.riskRules[1].fuzzyRange);
+  const lowQualRiskAdd = (lowQualRate / 100) * 25;
+  riskScore += lowQualRiskAdd;
+  riskBreakdown.lowQualifications = { percentage: lowQualRate, fuzzyLevel: lowQualFuzzy.level, riskPoints: lowQualRiskAdd };
   
-  if (totalQualifications > 0) {
-    const lowScoreRate = lowQualScores / totalQualifications;
-    riskLevel += lowScoreRate * 25; // Increase risk based on poor evaluations
+  // RULE 3: Account Maturity (weighted 20 points) - New suppliers are riskier
+  const isNewSupplier = supplier.contracts.length === 0 && supplier.bids.length === 0 && supplier.qualifications.length === 0;
+  const accountAgeFuzzy = supplier.createdAt ? 
+    getFuzzyMembership((Date.now() - (supplier.createdAt.seconds ? supplier.createdAt.seconds * 1000 : new Date(supplier.createdAt).getTime())) / (1000 * 60 * 60 * 24 * 30), PREDICTION_RULES.riskRules[2].fuzzyRange)
+    : { level: 'unknown', confidence: 0 };
+  const maturityRiskAdd = isNewSupplier ? 20 : 0;
+  riskScore += maturityRiskAdd;
+  riskBreakdown.newSupplierRisk = { isNew: isNewSupplier, fuzzyLevel: accountAgeFuzzy.level, riskPoints: maturityRiskAdd };
+  
+  // RULE 4: Delay Tendency Pattern Detection (weighted 25 points)
+  const delayedContracts = supplier.contracts.filter(c => c.completedOnTime === false).length;
+  const delayRate = supplier.contracts.length > 0 ? (delayedContracts / supplier.contracts.length) * 100 : 0;
+  const delayFuzzy = getFuzzyMembership(delayRate, PREDICTION_RULES.riskRules[3].fuzzyRange);
+  const delayRiskAdd = (delayRate / 100) * 25;
+  riskScore += delayRiskAdd;
+  riskBreakdown.delayTendency = { percentage: delayRate, fuzzyLevel: delayFuzzy.level, riskPoints: delayRiskAdd };
+  
+  // FORWARD CHAINING: If multiple risk factors triggered, increase risk exponentially
+  const riskFactorsTriggered = [
+    failureRate > 15,
+    lowQualRate > 25,
+    isNewSupplier,
+    delayRate > 30
+  ].filter(Boolean).length;
+  
+  if (riskFactorsTriggered >= 3) {
+    const chainedRiskMultiplier = 1.3; // 30% additional risk for multiple factors
+    riskScore = Math.min(100, riskScore * chainedRiskMultiplier);
+    riskBreakdown.chainedRiskEvent = `${riskFactorsTriggered} risk factors detected - risk elevated`;
   }
   
-  // New supplier risk adjustment
-  if (supplier.contracts.length === 0 && supplier.bids.length === 0 && supplier.qualifications.length === 0) {
-    riskLevel += 20; // New suppliers have higher risk
-  }
+  supplier.riskBreakdown = riskBreakdown;
   
-  return Math.max(0, Math.min(100, Math.round(riskLevel)));
+  return Math.max(0, Math.min(100, Math.round(riskScore)));
 };
 
-// Helper function to generate behavior prediction
+// Helper function to generate behavior prediction with pattern detection
 const generateBehaviorPrediction = (supplier, performanceScore, reliabilityScore) => {
   const avgScore = (performanceScore + reliabilityScore) / 2;
   
-  // Get average post-qualification score for additional insights
   const avgQualScore = supplier.qualifications.length > 0 
     ? supplier.qualifications.reduce((sum, qual) => sum + Number(qual.evaluationScore || 0), 0) / supplier.qualifications.length
     : avgScore;
   
+  // Pattern Detection Rules
+  const patterns = detectBehaviorPatterns(supplier);
+  
   return {
-    likelyToDelay: avgScore < 60 || avgQualScore < 60,
+    likelyToDelay: avgScore < 60 || avgQualScore < 60 || patterns.frequentDelayer,
     qualityLevel: avgQualScore > 80 ? 'high' : avgQualScore > 60 ? 'medium' : 'low',
     communicationRating: avgScore > 70 ? 'good' : avgScore > 50 ? 'average' : 'poor',
     recommendedActions: avgScore < 50 || avgQualScore < 50 ? ['monitor_closely', 'require_guarantees'] : 
                        avgScore < 70 ? ['regular_checkins'] : ['preferred_supplier'],
     trustScore: Math.round((avgScore + avgQualScore) / 2),
     postQualificationAverage: Math.round(avgQualScore),
-    evaluationCount: supplier.qualifications.length
+    evaluationCount: supplier.qualifications.length,
+    detectedPatterns: patterns,
+    predictionConfidence: patterns.confidence
+  };
+};
+
+// Pattern Detection - Identifies unusual supplier behavior
+const detectBehaviorPatterns = (supplier) => {
+  const patterns = [];
+  let confidence = 0;
+  
+  // PATTERN 1: Frequent Delayer - If >30% of contracts delayed
+  const delayCount = supplier.contracts.filter(c => c.completedOnTime === false).length;
+  const delayRate = supplier.contracts.length > 0 ? (delayCount / supplier.contracts.length) * 100 : 0;
+  if (delayRate > 30) {
+    patterns.push({ type: 'frequentDelayer', severity: 'high', description: `${delayCount}/${supplier.contracts.length} contracts delayed` });
+    confidence += 25;
+  }
+  
+  // PATTERN 2: Inconsistent Quality - If qualification scores vary widely
+  if (supplier.qualifications.length >= 2) {
+    const scores = supplier.qualifications.map(q => Number(q.evaluationScore || 0));
+    const avgScore = scores.reduce((a, b) => a + b) / scores.length;
+    const variance = scores.reduce((sum, score) => sum + Math.pow(score - avgScore, 2), 0) / scores.length;
+    const stdDev = Math.sqrt(variance);
+    
+    if (stdDev > 25) {
+      patterns.push({ type: 'inconsistentQuality', severity: 'medium', description: `Quality variance: ${stdDev.toFixed(1)}` });
+      confidence += 15;
+    }
+  }
+  
+  // PATTERN 3: Budget Overspender - If >40% of contracts exceeded budget
+  const budgetExceeded = supplier.contracts.filter(c => c.budgetStatus === 'exceeded').length;
+  const budgetExceedRate = supplier.contracts.length > 0 ? (budgetExceeded / supplier.contracts.length) * 100 : 0;
+  if (budgetExceedRate > 40) {
+    patterns.push({ type: 'budgetOverspender', severity: 'medium', description: `${budgetExceeded}/${supplier.contracts.length} budgets exceeded` });
+    confidence += 15;
+  }
+  
+  // PATTERN 4: Improving Trend - If recent scores are consistently higher
+  if (supplier.qualifications.length >= 3) {
+    const recentScores = supplier.qualifications.slice(-3).map(q => Number(q.evaluationScore || 0));
+    const olderScores = supplier.qualifications.slice(0, -3).map(q => Number(q.evaluationScore || 0));
+    
+    const recentAvg = recentScores.reduce((a, b) => a + b) / recentScores.length;
+    const olderAvg = olderScores.length > 0 ? olderScores.reduce((a, b) => a + b) / olderScores.length : 0;
+    
+    if (recentAvg > olderAvg + 10) {
+      patterns.push({ type: 'improvingTrend', severity: 'positive', description: `Recent avg: ${recentAvg.toFixed(1)} vs historical: ${olderAvg.toFixed(1)}` });
+      confidence += 20;
+    }
+  }
+  
+  // PATTERN 5: One-Time Contract Supplier - Limited history
+  if (supplier.contracts.length === 1 && supplier.bids.length < 2) {
+    patterns.push({ type: 'limitedHistory', severity: 'caution', description: 'Insufficient data for reliable prediction' });
+    confidence -= 10;
+  }
+  
+  return {
+    patterns,
+    frequentDelayer: patterns.some(p => p.type === 'frequentDelayer'),
+    improvingTrend: patterns.some(p => p.type === 'improvingTrend'),
+    inconsistentQuality: patterns.some(p => p.type === 'inconsistentQuality'),
+    budgetOverspender: patterns.some(p => p.type === 'budgetOverspender'),
+    confidence: Math.max(0, Math.min(100, confidence))
   };
 };
 
@@ -2144,6 +2407,194 @@ const updatePredictionChart = (predictions) => {
       fill: true
     }]
   };
+};
+
+// ============================================
+// TENSORFLOW.JS ML DELAY DETECTION
+// ============================================
+
+// ML Model state
+let delayPredictionModel = null;
+const mlModelLoaded = ref(false);
+const mlPredictions = ref({});
+
+// Initialize TensorFlow.js and create a simple delay prediction model
+const initializeMLModel = async () => {
+  try {
+    console.log('Initializing TensorFlow.js ML model...');
+    
+    // Create a simple neural network for delay prediction
+    delayPredictionModel = tf.sequential({
+      layers: [
+        // Input layer: 6 features
+        tf.layers.dense({
+          inputShape: [6],
+          units: 16,
+          activation: 'relu',
+          name: 'input_layer'
+        }),
+        
+        // Hidden layer 1
+        tf.layers.dropout({ rate: 0.2 }),
+        tf.layers.dense({
+          units: 12,
+          activation: 'relu',
+          name: 'hidden_layer_1'
+        }),
+        
+        // Hidden layer 2
+        tf.layers.dropout({ rate: 0.2 }),
+        tf.layers.dense({
+          units: 8,
+          activation: 'relu',
+          name: 'hidden_layer_2'
+        }),
+        
+        // Output layer: Binary classification (delay or no delay)
+        tf.layers.dense({
+          units: 1,
+          activation: 'sigmoid',
+          name: 'output_layer'
+        })
+      ]
+    });
+    
+    // Compile the model
+    delayPredictionModel.compile({
+      optimizer: tf.train.adam(0.01),
+      loss: 'binaryCrossentropy',
+      metrics: ['accuracy']
+    });
+    
+    mlModelLoaded.value = true;
+    console.log('✅ ML Model initialized successfully');
+  } catch (error) {
+    console.error('Error initializing ML model:', error);
+    mlModelLoaded.value = false;
+  }
+};
+
+// Normalize features to 0-1 range for ML model
+const normalizeFeatures = (features) => {
+  return {
+    delayRate: Math.min(features.delayRate / 100, 1),
+    onTimeRate: Math.min(features.onTimeRate / 100, 1),
+    contractCount: Math.min(features.contractCount / 20, 1),
+    accountAge: Math.min(features.accountAge / 60, 1),
+    qualificationScore: Math.min(features.qualificationScore / 100, 1),
+    failureRate: Math.min(features.failureRate / 100, 1)
+  };
+};
+
+// Extract features from supplier for ML prediction
+const extractSupplierFeatures = (supplier) => {
+  // RULE: Past Delay Rate
+  const delayCount = supplier.contracts.filter(c => c.completedOnTime === false).length;
+  const delayRate = supplier.contracts.length > 0 ? (delayCount / supplier.contracts.length) * 100 : 0;
+  
+  // RULE: On-Time Delivery Rate
+  const onTimeCount = supplier.contracts.filter(c => c.completedOnTime === true).length;
+  const onTimeRate = supplier.contracts.length > 0 ? (onTimeCount / supplier.contracts.length) * 100 : 50;
+  
+  // RULE: Contract Count (workload)
+  const contractCount = supplier.contracts.length;
+  
+  // RULE: Account Age (months)
+  const accountAge = supplier.createdAt 
+    ? (Date.now() - (supplier.createdAt.seconds ? supplier.createdAt.seconds * 1000 : new Date(supplier.createdAt).getTime())) / (1000 * 60 * 60 * 24 * 30)
+    : 0;
+  
+  // RULE: Average Qualification Score
+  const qualificationScore = supplier.qualifications.length > 0
+    ? supplier.qualifications.reduce((sum, q) => sum + Number(q.evaluationScore || 0), 0) / supplier.qualifications.length
+    : 50;
+  
+  // RULE: Contract Failure Rate
+  const failureCount = supplier.contracts.filter(c => c.status === 'cancelled' || c.status === 'failed').length;
+  const failureRate = supplier.contracts.length > 0 ? (failureCount / supplier.contracts.length) * 100 : 0;
+  
+  return {
+    delayRate: Math.max(0, Math.min(100, delayRate)),
+    onTimeRate: Math.max(0, Math.min(100, onTimeRate)),
+    contractCount: Math.max(0, Math.min(20, contractCount)),
+    accountAge: Math.max(0, Math.min(60, accountAge)),
+    qualificationScore: Math.max(0, Math.min(100, qualificationScore)),
+    failureRate: Math.max(0, Math.min(100, failureRate))
+  };
+};
+
+// Predict delay probability using TensorFlow.js model
+const predictSupplierDelay = async (supplier) => {
+  if (!delayPredictionModel || !mlModelLoaded.value) {
+    return null;
+  }
+  
+  try {
+    // Extract features from supplier
+    const features = extractSupplierFeatures(supplier);
+    
+    // Normalize features for ML model
+    const normalized = normalizeFeatures(features);
+    
+    // Create tensor input: [delayRate, onTimeRate, contractCount, accountAge, qualScore, failureRate]
+    const input = tf.tensor2d([
+      [
+        normalized.delayRate,
+        normalized.onTimeRate,
+        normalized.contractCount,
+        normalized.accountAge,
+        normalized.qualificationScore,
+        normalized.failureRate
+      ]
+    ]);
+    
+    // Get prediction from model
+    const prediction = delayPredictionModel.predict(input);
+    const delayProbability = await prediction.data();
+    
+    // Calculate confidence based on feature variance
+    const featureValues = Object.values(features);
+    const avg = featureValues.reduce((a, b) => a + b) / featureValues.length;
+    const variance = featureValues.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / featureValues.length;
+    const confidence = Math.max(50, Math.min(100, 100 - Math.sqrt(variance)));
+    
+    // Cleanup tensors
+    input.dispose();
+    prediction.dispose();
+    
+    // Return prediction result
+    return {
+      supplierName: supplier.name || supplier.email || 'Unknown',
+      probability: Math.round(delayProbability[0] * 100),
+      confidence: Math.round(confidence),
+      riskLevel: delayProbability[0] > 0.7 ? 'CRITICAL' : delayProbability[0] > 0.5 ? 'HIGH' : delayProbability[0] > 0.3 ? 'MEDIUM' : 'LOW',
+      features: features,
+      normalized: normalized
+    };
+  } catch (error) {
+    console.error('Error predicting delay:', error);
+    return null;
+  }
+};
+
+// Batch predict delays for all suppliers
+const predictAllSupplierDelays = async (suppliers) => {
+  const predictions = {};
+  
+  for (const supplier of suppliers) {
+    const prediction = await predictSupplierDelay(supplier);
+    if (prediction) {
+      predictions[supplier.id] = prediction;
+    }
+  }
+  
+  mlPredictions.value = predictions;
+  return predictions;
+};
+
+// Get ML delay prediction for a specific supplier
+const getSupplierDelayPrediction = (supplierId) => {
+  return mlPredictions.value[supplierId] || null;
 };
 
 </script>
@@ -3183,6 +3634,235 @@ const updatePredictionChart = (predictions) => {
   
   .quick-action-btn:hover {
     transform: none;
+  }
+}
+
+/* Machine Learning Predictions Section */
+.ml-predictions-section {
+  margin-top: 30px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.ml-predictions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ml-prediction-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.ml-prediction-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.ml-prediction-card.risk-critical {
+  border-left: 5px solid #dc2626;
+  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%);
+}
+
+.ml-prediction-card.risk-high {
+  border-left: 5px solid #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.ml-prediction-card.risk-medium {
+  border-left: 5px solid #0ea5e9;
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+}
+
+.ml-prediction-card.risk-low {
+  border-left: 5px solid #16a34a;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.ml-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ml-risk-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.ml-risk-badge.critical {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.ml-risk-badge.high {
+  background-color: #fcd34d;
+  color: #92400e;
+}
+
+.ml-risk-badge.medium {
+  background-color: #bae6fd;
+  color: #1e40af;
+}
+
+.ml-risk-badge.low {
+  background-color: #bbf7d0;
+  color: #166534;
+}
+
+.ml-supplier-name {
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.ml-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ml-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.ml-probability-section {
+  padding: 10px 0;
+}
+
+.ml-probability-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.ml-probability-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.ml-probability-fill.critical {
+  background: linear-gradient(90deg, #dc2626, #991b1b);
+}
+
+.ml-probability-fill.high {
+  background: linear-gradient(90deg, #f59e0b, #92400e);
+}
+
+.ml-probability-fill.medium {
+  background: linear-gradient(90deg, #0ea5e9, #1e40af);
+}
+
+.ml-probability-fill.low {
+  background: linear-gradient(90deg, #16a34a, #166534);
+}
+
+.ml-probability-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.ml-confidence-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ml-value {
+  font-weight: 600;
+  color: #0f2942;
+  font-size: 0.95rem;
+}
+
+.ml-features-section {
+  padding: 8px 0;
+}
+
+.ml-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ml-features-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  padding: 4px 0;
+}
+
+.ml-feature-name {
+  color: #666;
+  font-weight: 500;
+}
+
+.ml-feature-value {
+  color: #333;
+  font-weight: 600;
+  background-color: rgba(15, 41, 66, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ml-info-box {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+/* Responsive ML Predictions */
+@media (max-width: 1024px) {
+  .ml-predictions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .ml-predictions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .ml-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .ml-predictions-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

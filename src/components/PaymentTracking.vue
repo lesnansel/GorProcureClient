@@ -249,8 +249,8 @@ export default {
     const searchQuery = ref("");
     const statusFilter = ref("all");
 
-    // Sidebar state
-    const sidebarOpen = ref(true);
+    // Sidebar state - changed from true to false
+    const sidebarOpen = ref(false);
     const hoverUser = ref(false);
 
     // Toggle sidebar function

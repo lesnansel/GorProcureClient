@@ -436,7 +436,7 @@ export default {
     const itemsPerPage = ref(10);
     const selectedPurchase = ref(null);
     const fileInput = ref(null);
-    const sidebarOpen = ref(true);
+    const sidebarOpen = ref(false); // Changed from true to false
     const hoverUser = ref(false);
 
     // Keyboard accessibility: close sidebar on Esc

@@ -543,10 +543,10 @@ export default {
 .modal-content {
   background: #fff;
   padding: 2em 2em 1.5em 2em;
-  border-radius: 8px;
+  border-radius: 12px;
   min-width: 320px;
   max-width: 90vw;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   text-align: center;
 }
 .file-list {
@@ -560,58 +560,64 @@ export default {
   margin-bottom: 0.5em;
 }
 .file-select-btn {
-  background: #607d8b;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 0.5em 1.2em;
   cursor: pointer;
   font-size: 1em;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 .file-select-btn:hover {
-  background: #455a64;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  transform: translateY(-1px);
 }
 .modal-close-btn {
-  background: #e57373;
+  background: #ef4444;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 0.5em 1.2em;
   cursor: pointer;
   font-size: 1em;
   margin-top: 1em;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 .modal-close-btn:hover {
-  background: #c62828;
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 </style>
 
 <style scoped>
 .records-container {
   padding: 20px;
-  font-family: Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  color: #444;
-  background: #f8fafc;
+  color: #1e293b;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  min-height: 100vh;
 }
 
 h1 {
   font-size: clamp(1.5rem, 4vw, 2rem);
   margin-bottom: 1rem;
   text-align: center;
-  color: #2d3748;
+  color: #1e293b;
   font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .actions {
   margin-bottom: 20px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
 }
 
@@ -621,39 +627,42 @@ input[type="file"] {
 
 .custom-file-upload {
   display: inline-block;
-  padding: 10px 15px;
-  background-color: #4CAF50;
-  color: #f4f4f4;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s, transform 0.1s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
   text-align: center;
 }
 
 .custom-file-upload:hover {
-  background-color: #45a049;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
 }
 
 .custom-file-upload:active {
-  transform: translateY(1px);
+  transform: translateY(0px);
 }
 
 .action-button {
-  padding: 10px 15px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s, transform 0.1s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  color: #f4f4f4;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  color: #ffffff;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-button:hover {
@@ -661,87 +670,104 @@ input[type="file"] {
 }
 
 .action-button:active {
-  transform: translateY(1px);
+  transform: translateY(0px);
 }
 
 .export {
-  background-color: #2196F3;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
 .open {
-  background-color: #607d8b;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  box-shadow: 0 2px 4px rgba(30, 41, 59, 0.2);
 }
 .open:hover {
-  background-color: #455a64;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  box-shadow: 0 4px 8px rgba(30, 41, 59, 0.3);
 }
 
 .export:hover {
-  background-color: #0b7dda;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .detect {
-  background-color: #ff9800;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
 }
 
 .detect:hover {
-  background-color: #e68a00;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: 0 4px 8px rgba(249, 115, 22, 0.3);
 }
 
 .add {
-  background-color: #673AB7;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
 }
 
 .add:hover {
-  background-color: #5e35b1;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
 }
 
 .save {
-  background-color: #009688;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .save:hover {
-  background-color: #00796b;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
 }
 
 .table-responsive {
   width: 100%;
   overflow-x: auto;
   margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  background: #ffffff;
 }
 
 th, td {
-  border: 1px solid #e5e7eb;
-  padding: 8px;
-  color: #444;
+  border: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  color: #1e293b;
   font-size: 14px;
   font-weight: 500;
-  background: #f9fafb;
+  background: #ffffff;
 }
 
 th {
-  background-color: #f1f5f9;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   font-weight: 700;
-  color: #2d3748;
+  color: #1e293b;
+  letter-spacing: 0.025em;
 }
 
 .overdue {
-  color: #e57373;
+  color: #dc2626;
   font-weight: 600;
-  background: #fff6f6;
-  border-radius: 3px;
-  padding: 2px 6px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-radius: 6px;
+  padding: 4px 8px;
+  border: 1px solid #fecaca;
 }
 .on-time {
-  color: #38a169;
+  color: #16a34a;
   font-weight: 600;
-  background: #f0fdf4;
-  border-radius: 3px;
-  padding: 2px 6px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 6px;
+  padding: 4px 8px;
+  border: 1px solid #bbf7d0;
 }
 
 .summary-bar {
@@ -751,35 +777,40 @@ th {
   margin-bottom: 20px;
   gap: 20px;
   flex-wrap: wrap;
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 10px 0;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
 }
 
 .summary-item {
-  color: #444;
-  padding: 8px 18px 0 18px;
-  border-radius: 4px 4px 0 0;
+  color: #1e293b;
+  padding: 12px 20px;
+  border-radius: 8px;
   min-width: 120px;
   text-align: center;
   position: relative;
   font-size: 15px;
   font-weight: 500;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .summary-label {
   display: block;
-  font-size: 15px;
-  margin-bottom: 2px;
-  color: #555;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .summary-value {
   display: block;
   font-size: 20px;
   font-weight: 700;
-  margin-bottom: -8px;
-  color: #2d3748;
+  color: #1e293b;
 }
 
 .zoom-bar {
@@ -789,18 +820,22 @@ th {
   margin-bottom: 18px;
   margin-left: 0;
   justify-content: center;
-  font-size: 18px;
-  color: #444;
+  font-size: 16px;
+  color: #1e293b;
+  background: #f8fafc;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .zoom-bar label, .zoom-bar span {
-  color: #444;
-  font-size: 18px;
+  color: #1e293b;
+  font-size: 16px;
   font-weight: 600;
 }
 
 #zoom-slider {
-  accent-color: #2196F3;
+  accent-color: #3b82f6;
   width: 200px;
   height: 6px;
   margin: 0 10px;

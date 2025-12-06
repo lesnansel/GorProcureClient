@@ -223,6 +223,98 @@ export default {
       }
     };
 
+    // Email service configuration with fallback
+    const EMAIL_SERVICE_URLS = [
+      'http://127.0.0.1:5000',           // Local development
+      'http://192.168.250.164:5000',     // Local network
+      'https://govprocurebackend-1.onrender.com'  // Hosted fallback
+    ];
+
+    const sendStatusEmailNotification = async (email, prId, newStatus) => {
+      console.log('📧 Sending email notification:', { email, prId, newStatus });
+      
+      // Validate email format
+      if (!email || !email.includes('@')) {
+        console.error('❌ Invalid email address:', email);
+        showNotification('Invalid email address', 'error');
+        return;
+      }
+
+      // Try each email service URL until one works
+      for (let i = 0; i < EMAIL_SERVICE_URLS.length; i++) {
+        const serviceUrl = EMAIL_SERVICE_URLS[i];
+        console.log(`📤 Trying email service ${i + 1}/${EMAIL_SERVICE_URLS.length}: ${serviceUrl}`);
+        
+        try {
+          // Set different timeouts based on service type
+          let timeout;
+          if (serviceUrl.includes('127.0.0.1') || serviceUrl.includes('192.168.')) {
+            timeout = 10000; // 10 seconds for local services
+          } else {
+            timeout = 60000; // 60 seconds for hosted services (to handle cold starts)
+          }
+          
+          console.log(`⏱️ Using timeout: ${timeout/1000} seconds for ${serviceUrl}`);
+          
+          const response = await fetch(`${serviceUrl}/send-pr-status-email`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+              email: email,
+              prNumber: prId, 
+              prId: prId,
+              newStatus: newStatus 
+            }),
+            // Dynamic timeout based on service type
+            signal: AbortSignal.timeout(timeout)
+          });
+          
+          console.log(`📧 Email service ${serviceUrl} response status:`, response.status);
+          
+          const data = await response.json();
+          console.log(`📧 Email service ${serviceUrl} response data:`, data);
+          
+          if (response.ok) {
+            console.log(`✅ Email sent successfully via ${serviceUrl}`);
+            showNotification(`Status email sent to ${email}!`, 'success');
+            return; // Success, no need to try other URLs
+          } else {
+            console.warn(`⚠️ Email service ${serviceUrl} returned error:`, data.error);
+            
+            // If this is the last URL, show the error
+            if (i === EMAIL_SERVICE_URLS.length - 1) {
+              if (response.status === 503) {
+                showNotification('Status updated! Email service temporarily unavailable.', 'warning');
+              } else if (response.status === 500) {
+                showNotification('Status updated! Email service configuration issue.', 'warning');
+              } else {
+                showNotification(`Status updated! Email error: ${data.error}`, 'warning');
+              }
+            }
+          }
+          
+        } catch (error) {
+          console.error(`❌ Email service ${serviceUrl} failed:`, error.message);
+          
+          // If this is the last URL, show final error
+          if (i === EMAIL_SERVICE_URLS.length - 1) {
+            if (error.name === 'TimeoutError') {
+              const timeoutSeconds = serviceUrl.includes('127.0.0.1') || serviceUrl.includes('192.168.') ? 10 : 60;
+              showNotification(`Status updated! All email services timed out (waited ${timeoutSeconds}s).`, 'warning');
+            } else if (error.message.includes('fetch') || error.message.includes('network')) {
+              showNotification('Status updated! All email services unreachable.', 'warning');
+            } else {
+              showNotification('Status updated! Email notification failed.', 'warning');
+            }
+          }
+          // Continue to next URL
+        }
+      }
+    };
+
     const showNotification = (message, type = "success") => {
       createToastContainer();
 
@@ -237,9 +329,16 @@ export default {
       toast.style.transform = "translateX(100%)";
       toast.style.transition = "all 0.4s ease";
 
-      if (type === "success") toast.style.backgroundColor = "#4CAF50";
-      else if (type === "error") toast.style.backgroundColor = "#F44336";
-      else toast.style.backgroundColor = "#333";
+      // Different colors for different types
+      if (type === "success") {
+        toast.style.backgroundColor = "#4CAF50";
+      } else if (type === "error") {
+        toast.style.backgroundColor = "#F44336";
+      } else if (type === "warning") {
+        toast.style.backgroundColor = "#FF9800";
+      } else {
+        toast.style.backgroundColor = "#333";
+      }
 
       toastContainer.value.appendChild(toast);
 
@@ -254,30 +353,7 @@ export default {
         setTimeout(() => {
           toastContainer.value.removeChild(toast);
         }, 400);
-      }, 3000);
-    };
-
-    const sendStatusEmailNotification = async (email, prId, newStatus) => {
-      console.log('Sending email notification:', { email, prId, newStatus }); // Debug log
-      try {
-        const response = await fetch('https://govprocurebackend-1.onrender.com/send-pr-status-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, prNumber: prId, newStatus })
-        });
-        
-        const data = await response.json();
-        console.log('Email API response:', data); // Debug log
-        
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to send email');
-        }
-        
-        showNotification(`Status email sent to ${email}!`);
-      } catch (error) {
-        console.error("Email notification failed:", error);
-        showNotification('Failed to send status email', 'error');
-      }
+      }, 5000);
     };
 
     const viewRequest = (userId) => {
@@ -303,8 +379,9 @@ export default {
 
         newRequests.forEach(req => {
           const prevStatus = previousStatuses.value[req.id];
+          
           // Enhanced debug logging
-          console.log('Request data:', {
+          console.log('📊 Request data:', {
             id: req.id,
             userEmail: req.userEmail,
             itemName: req.itemName,
@@ -312,15 +389,30 @@ export default {
             previousStatus: prevStatus
           });
           
-          if (req.userEmail && prevStatus && req.status !== prevStatus) {
-            console.log(`Sending email notification to ${req.userEmail} for PR ${req.id}`);
+          // Only send email if status actually changed and we have a valid email
+          if (req.userEmail && 
+              req.userEmail.includes('@') && 
+              prevStatus && 
+              req.status !== prevStatus) {
+            
+            console.log(`📧 Status changed for ${req.itemName}: ${prevStatus} → ${req.status}`);
+            console.log(`📧 Sending email notification to ${req.userEmail} for PR ${req.id}`);
+            
+            // Send email notification
             sendStatusEmailNotification(req.userEmail, req.id, req.status);
+            
+            // Show local notification
             showNotification(`Status for "${req.itemName}" updated to ${req.status}`, "success");
           }
+          
+          // Update previous status
           previousStatuses.value[req.id] = req.status;
         });
 
         requests.value = newRequests;
+      }, (error) => {
+        console.error("❌ Firestore listener error:", error);
+        showNotification('Database connection error', 'error');
       });
 
       return unsubscribe;
@@ -437,7 +529,6 @@ export default {
   overflow: hidden;
   position: relative;
 }
-
 
 .card-header.card-header-flex {
   display: flex;

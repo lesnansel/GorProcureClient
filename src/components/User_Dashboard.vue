@@ -1008,7 +1008,7 @@ export default {
 /* Card Design */
 .dashboard-card {
   width: 100%;
-  max-width: 1400px; /* Increased from 1000px to 1400px */
+  max-width: 140085px; /* Increased from 1000px to 1400px */
   background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);

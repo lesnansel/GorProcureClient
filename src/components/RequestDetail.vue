@@ -81,10 +81,6 @@
                 <span class="detail-value">{{ requestDetails.userEmail }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Date Created</span>
-                <span class="detail-value">{{ formatDate(requestDetails.createdAt) }}</span>
-              </div>
-              <div class="detail-row">
                 <span class="detail-label">Required By</span>
                 <span class="detail-value">{{ formatDate(requestDetails.requiredDate) }}</span>
               </div>
@@ -347,7 +343,7 @@ export default {
 
 .admin-card {
   width: 100%;
-  max-width: 900px;
+  max-width: 85vw;
   background-color: #fff;
   border-radius: 16px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);

@@ -21,8 +21,8 @@
           <!-- Stats Overview -->
           <div class="stats-overview">
             <div class="stat-item">
-              <div class="stat-value">{{ filteredBids.length }}</div>
-              <div class="stat-label">Total Bids</div>
+              <div class="stat-value">{{ activeTab === 'active' ? filteredBids.length : archivedBids.length }}</div>
+              <div class="stat-label">{{ activeTab === 'active' ? 'Active Bids' : 'Archived Bids' }}</div>
             </div>
             <div class="stat-item">
               <div class="stat-value">{{ pendingBidsCount }}</div>
@@ -33,13 +33,38 @@
               <div class="stat-label">Approved</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">{{ rejectedBidsCount }}</div>
-              <div class="stat-label">Rejected</div>
+              <div class="stat-value">{{ totalArchivedCount }}</div>
+              <div class="stat-label">Total Archived</div>
             </div>
           </div>
         </div>
 
         <div class="card-content">
+          <!-- Tab Navigation -->
+          <div class="tab-navigation">
+            <button 
+              :class="['tab-btn', { active: activeTab === 'active' }]"
+              @click="activeTab = 'active'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+              </svg>
+              Active Bids ({{ bids.length }})
+            </button>
+            <button 
+              :class="['tab-btn', { active: activeTab === 'archive' }]"
+              @click="activeTab = 'archive'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+              Archive ({{ totalArchivedCount }})
+            </button>
+          </div>
+
           <!-- Search and Filter Bar -->
           <div class="action-bar">
             <div class="search-container">
@@ -52,12 +77,16 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
             <div class="filter-container">
-              <select v-model="statusFilter" class="filter-select">
+              <select v-model="statusFilter" class="filter-select" v-if="activeTab === 'active'">
                 <option value="all">All Statuses</option>
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
                 <option value="more-info">Needs More Info</option>
+              </select>
+              <select v-model="archiveFilter" class="filter-select" v-else>
+                <option value="all">All Archived</option>
+                <option value="rejected">Rejected</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
           </div>
@@ -67,99 +96,188 @@
             <div class="loading-spinner">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="loading-icon"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
             </div>
-            <p>Loading bids...</p>
+            <p>Loading {{ activeTab === 'active' ? 'bids' : 'archived bids' }}...</p>
           </div>
           
-          <div v-else-if="filteredBids.length === 0" class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1-2 2h-4a2 2 0 0 0-2 2v-7"></path><path d="M8 6h3a1 1 0 0 1 1 1v9"></path><path d="M8 22h4a2 2 0 0 0 2-2v-7"></path><path d="M2 19h5"></path><path d="M18 5V3c0-.6-.4-1-1-1h-4a1 1 0 0 0-1 1v2"></path><path d="M10 5V3c0-.6-.4-1-1-1H5a1 1 0 0 0-1 1v2"></path></svg>
-            <p class="empty-text">No bids available for review.</p>
-            <p class="empty-subtext">Bids will appear here once vendors submit them.</p>
-          </div>
-
-          <template v-else>
-            <!-- Section Header -->
-            <div class="section-header">
-              <h3 class="section-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/></svg>
-                Bid Submissions
-              </h3>
-              <div class="status-count">
-                <span>Showing {{ filteredBids.length }} of {{ bids.length }} bids</span>
-              </div>
+          <!-- Active Bids Tab Content -->
+          <div v-else-if="activeTab === 'active'">
+            <div v-if="filteredBids.length === 0" class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="empty-icon"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1-2 2h-4a2 2 0 0 0-2 2v-7"></path><path d="M8 6h3a1 1 0 0 1 1 1v9"></path><path d="M8 22h4a2 2 0 0 0 2-2v-7"></path><path d="M2 19h5"></path><path d="M18 5V3c0-.6-.4-1-1-1h-4a1 1 0 0 0-1 1v2"></path><path d="M10 5V3c0-.6-.4-1-1-1H5a1 1 0 0 0-1 1v2"></path></svg>
+              <p class="empty-text">No active bids available for review.</p>
+              <p class="empty-subtext">Active bids will appear here once vendors submit them.</p>
             </div>
 
-            <!-- Bids Cards Grid -->
-            <div class="bids-grid">
-              <div v-for="bid in filteredBids" :key="bid.id" class="bid-card" :class="`bid-card-${bid.status.toLowerCase()}`">
-                <div class="bid-card-header">
-                  <div class="bid-header-content">
-                    <div class="bid-title">
-                      {{ bid.itemName || bid.fileName || 'Unnamed Request' }}
-                      <span
-                        :class="{
-                          'text-green-600': bid.source === 'firestore',
-                          'text-red-500': bid.source === 'storage-only'
-                        }"
-                        style="font-size:0.8em;margin-left:8px;"
-                      >
-                        {{ bid.source === 'firestore' ? 'Registered' : 'Unregistered' }}
+            <template v-else>
+              <!-- Section Header -->
+              <div class="section-header">
+                <h3 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/></svg>
+                  Active Bid Submissions
+                </h3>
+                <div class="status-count">
+                  <span>Showing {{ filteredBids.length }} of {{ bids.length }} bids</span>
+                </div>
+              </div>
+
+              <!-- Bids Cards Grid -->
+              <div class="bids-grid">
+                <div v-for="bid in filteredBids" :key="bid.id" class="bid-card" :class="`bid-card-${bid.status.toLowerCase()}`">
+                  <div class="bid-card-header">
+                    <div class="bid-header-content">
+                      <div class="bid-title">
+                        {{ bid.itemName || bid.fileName || 'Unnamed Request' }}
+                        <span
+                          :class="{
+                            'text-green-600': bid.source === 'firestore',
+                            'text-red-500': bid.source === 'storage-only'
+                          }"
+                          style="font-size:0.8em;margin-left:8px;"
+                        >
+                          {{ bid.source === 'firestore' ? 'Registered' : 'Unregistered' }}
+                        </span>
+                      </div>
+                      <span class="status-badge" :class="`status-${bid.status.toLowerCase()}`">
+                        {{ bid.status }}
                       </span>
                     </div>
-                    <span class="status-badge" :class="`status-${bid.status.toLowerCase()}`">
-                      {{ bid.status }}
-                    </span>
+                    <div class="bid-price-tag">
+                      <span class="bid-price">{{ formatCurrency(bid.bidPrice) }}</span>
+                      <span class="bid-currency">{{ bid.currency }}</span>
+                    </div>
                   </div>
-                  <div class="bid-price-tag">
-                    <span class="bid-price">{{ formatCurrency(bid.bidPrice) }}</span>
-                    <span class="bid-currency">{{ bid.currency }}</span>
-                  </div>
-                </div>
 
-                <div class="bid-card-body">
-                  <div class="bid-vendor">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>{{ bid.bidderName || 'Anonymous Vendor' }}</span>
+                  <div class="bid-card-body">
+                    <div class="bid-vendor">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      <span>{{ bid.bidderName || 'Anonymous Vendor' }}</span>
+                    </div>
+                    <div class="bid-date">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <span>{{ formatDate(bid.submissionDate || bid.submittedAt) }}</span>
+                    </div>
+                    <div class="bid-description">
+                      <template v-if="bid.fileUrl">
+                        <a :href="bid.fileUrl" target="_blank" class="text-blue-600 underline">Download File</a>
+                      </template>
+                      <template v-else>
+                        {{ truncateDescription(bid.description) || 'No description provided' }}
+                      </template>
+                    </div>
                   </div>
-                  <div class="bid-date">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <span>{{ formatDate(bid.submissionDate || bid.submittedAt) }}</span>
-                  </div>
-                  <div class="bid-description">
-                    <template v-if="bid.fileUrl">
-                      <a :href="bid.fileUrl" target="_blank" class="text-blue-600 underline">Download File</a>
-                    </template>
-                    <template v-else>
-                      {{ truncateDescription(bid.description) || 'No description provided' }}
-                    </template>
-                  </div>
-                </div>
 
-                <div v-if="bid.source === 'firestore'" class="bid-card-actions">
-                  <button @click="navigateToBidDetail(bid.id)" class="card-action-btn view" title="View Details">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    Details
-                  </button>
-                  <button @click="approveBid(bid.id)" class="card-action-btn approve" title="Approve Bid" :enable="bid.status === 'Approved'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
-                    Approve
-                  </button>
-                  <button @click="rejectBid(bid.id)" class="card-action-btn reject" title="Reject Bid" :enable="bid.status === 'Rejected'">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                    Reject
-                  </button>
-                </div>
-                <div v-else class="bid-card-actions">
-                  <a v-if="bid.fileUrl" :href="bid.fileUrl" target="_blank" class="card-action-btn view" style="grid-column: 1 / -1;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    Download File
-                  </a>
-                  <button @click="registerBid(bid)" class="card-action-btn more-info text-blue-600" style="grid-column: 1 / -1;">
-                    📝 Register This Bid
-                  </button>
+                  <div v-if="bid.source === 'firestore'" class="bid-card-actions">
+                    <button @click="navigateToBidDetail(bid.id)" class="card-action-btn view" title="View Details">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      Details
+                    </button>
+                    <button @click="approveBid(bid.id)" class="card-action-btn approve" title="Approve Bid" :disabled="bid.status === 'Approved'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                      Approve
+                    </button>
+                    <button @click="rejectBid(bid.id)" class="card-action-btn reject" title="Reject Bid" :disabled="bid.status === 'Rejected'">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                      Reject & Archive
+                    </button>
+                  </div>
+                  <div v-else class="bid-card-actions">
+                    <a v-if="bid.fileUrl" :href="bid.fileUrl" target="_blank" class="card-action-btn view" style="grid-column: 1 / -1;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      Download File
+                    </a>
+                    <button @click="registerBid(bid)" class="card-action-btn more-info text-blue-600" style="grid-column: 1 / -1;">
+                      📝 Register This Bid
+                    </button>
+                  </div>
                 </div>
               </div>
+            </template>
+          </div>
+
+          <!-- Archive Tab Content -->
+          <div v-else-if="activeTab === 'archive'">
+            <div v-if="filteredArchivedBids.length === 0" class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+              <p class="empty-text">No archived bids found.</p>
+              <p class="empty-subtext">Rejected and expired bids will appear here.</p>
             </div>
-          </template>
+
+            <template v-else>
+              <!-- Archive Section Header -->
+              <div class="section-header">
+                <h3 class="section-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                    <rect x="1" y="3" width="22" height="5"></rect>
+                    <line x1="10" y1="12" x2="14" y2="12"></line>
+                  </svg>
+                  Archived Bids
+                </h3>
+                <div class="status-count">
+                  <span>Showing {{ filteredArchivedBids.length }} of {{ archivedBids.length }} archived bids</span>
+                </div>
+              </div>
+
+              <!-- Archived Bids Cards Grid -->
+              <div class="bids-grid">
+                <div v-for="bid in filteredArchivedBids" :key="bid.id" class="bid-card archived-bid-card">
+                  <div class="bid-card-header">
+                    <div class="bid-header-content">
+                      <div class="bid-title">
+                        {{ bid.itemName || bid.fileName || 'Unnamed Request' }}
+                      </div>
+                      <span class="status-badge status-archived">
+                        {{ bid.archiveReason || 'Archived' }}
+                      </span>
+                    </div>
+                    <div class="archived-date">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                        <rect x="1" y="3" width="22" height="5"></rect>
+                        <line x1="10" y1="12" x2="14" y2="12"></line>
+                      </svg>
+                      <span>Archived: {{ formatDate(bid.archivedAt) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="bid-card-body">
+                    <div class="bid-vendor">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      <span>{{ bid.bidderName || 'Anonymous Vendor' }}</span>
+                    </div>
+                    <div class="bid-price-info">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                      <span>{{ formatCurrency(bid.bidPrice) }} {{ bid.currency }}</span>
+                    </div>
+                    <div class="bid-description">
+                      {{ truncateDescription(bid.description) || 'No description provided' }}
+                    </div>
+                    <div v-if="bid.archiveReason" class="archive-reason">
+                      <strong>Archive Reason:</strong> {{ bid.archiveReason }}
+                    </div>
+                  </div>
+
+                  <div class="bid-card-actions">
+                    <button @click="viewArchivedBidDetails(bid)" class="card-action-btn view" title="View Details">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      View Details
+                    </button>
+                    <button @click="restoreBid(bid.id)" class="card-action-btn restore" title="Restore Bid">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                      Restore
+                    </button>
+                    <button @click="permanentlyDeleteBid(bid.id)" class="card-action-btn delete" title="Permanently Delete">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 3 12c0 .6.4 1 1 1h8c.6 0 1-.4 1-1l3-12"></path><path d="M8 6V4c0-.6.4-1 1-1h4c.6 0 1 .4 1 1v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
 
@@ -307,7 +425,7 @@
 import AdminNavigationBar from './AdminNavigationBar.vue';
 import { ref, onMounted, computed } from "vue";
 import { db } from "@/firebase";
-import { collection, doc, updateDoc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, updateDoc, onSnapshot, setDoc, serverTimestamp, deleteDoc, addDoc } from "firebase/firestore";
 import { storage } from "@/firebase";
 import { ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import { useRouter } from "vue-router";
@@ -326,6 +444,9 @@ export default {
     const isRequestingInfo = ref(false);
     const activeBid = ref({});
     const infoRequestText = ref("");
+    const activeTab = ref('active');
+    const archivedBids = ref([]);
+    const archiveFilter = ref('all');
 
     // Computed values for stats
     const pendingBidsCount = computed(() => 
@@ -336,16 +457,13 @@ export default {
       bids.value.filter(bid => bid.status === "Approved").length
     );
     
-    const rejectedBidsCount = computed(() => 
-      bids.value.filter(bid => bid.status === "Rejected").length
-    );
+    const totalArchivedCount = computed(() => archivedBids.value.length);
 
     // Fetch bids from Firestore and also scan Storage for unregistered bids
     const fetchBids = async () => {
       try {
         loading.value = true;
 
-        // --- Firestore listener ---
         const unsubscribe = onSnapshot(collection(db, "bids"), async (snapshot) => {
           const firestoreBids = snapshot.docs.map((doc) => {
             const data = doc.data();
@@ -357,7 +475,6 @@ export default {
             };
           });
 
-          // --- Storage fallback ---
           const storageBids = [];
           const folderRef = storageRef(storage, "bids");
 
@@ -401,6 +518,24 @@ export default {
       }
     };
 
+    // Fetch archived bids
+    const fetchArchivedBids = async () => {
+      try {
+        const unsubscribe = onSnapshot(collection(db, "archivedBids"), (snapshot) => {
+          archivedBids.value = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+            };
+          });
+        });
+        return unsubscribe;
+      } catch (error) {
+        console.error("❌ Error fetching archived bids:", error);
+      }
+    };
+
     const filteredBids = computed(() => {
       let result = [...bids.value];
       
@@ -408,6 +543,29 @@ export default {
       if (statusFilter.value !== "all") {
         result = result.filter(bid => 
           bid.status.toLowerCase() === statusFilter.value.toLowerCase()
+        );
+      }
+      
+      // Apply search query
+      if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter(bid => 
+          (bid.itemName && bid.itemName.toLowerCase().includes(query)) ||
+          (bid.bidderName && bid.bidderName.toLowerCase().includes(query)) ||
+          (bid.description && bid.description.toLowerCase().includes(query))
+        );
+      }
+      
+      return result;
+    });
+
+    const filteredArchivedBids = computed(() => {
+      let result = [...archivedBids.value];
+      
+      // Apply archive filter
+      if (archiveFilter.value !== "all") {
+        result = result.filter(bid => 
+          bid.archiveReason?.toLowerCase() === archiveFilter.value.toLowerCase()
         );
       }
       
@@ -442,7 +600,6 @@ export default {
     const formatDate = (timestamp) => {
       if (!timestamp) return "N/A";
       
-      // If timestamp is a Firestore Timestamp, convert to JS Date
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       
       return date.toLocaleDateString("en-US", {
@@ -478,12 +635,10 @@ export default {
           reviewDate: new Date()
         });
         
-        // Update local state
         const index = bids.value.findIndex(bid => bid.id === bidId);
         if (index !== -1) {
           bids.value[index].status = "Approved";
           
-          // Also update active bid if we're viewing it
           if (isViewingDetails.value && activeBid.value.id === bidId) {
             activeBid.value.status = "Approved";
           }
@@ -498,33 +653,73 @@ export default {
 
     const rejectBid = async (bidId) => {
       try {
-        const bidRef = doc(db, "bids", bidId);
-        await updateDoc(bidRef, {
-          status: "Rejected",
-          reviewDate: new Date()
-        });
+        const bidToArchive = bids.value.find(bid => bid.id === bidId);
         
-        // Update local state
-        const index = bids.value.findIndex(bid => bid.id === bidId);
-        if (index !== -1) {
-          bids.value[index].status = "Rejected";
-          
-          // Also update active bid if we're viewing it
-          if (isViewingDetails.value && activeBid.value.id === bidId) {
-            activeBid.value.status = "Rejected";
-          }
+        if (!bidToArchive) {
+          showNotification("Bid not found", "error");
+          return;
         }
+
+        const archivedBidData = {
+          ...bidToArchive,
+          originalBidId: bidId,
+          archivedAt: serverTimestamp(),
+          archiveReason: 'rejected',
+          archivedBy: 'admin',
+        };
+
+        await addDoc(collection(db, "archivedBids"), archivedBidData);
+        await deleteDoc(doc(db, "bids", bidId));
         
-        showNotification("Bid rejected successfully!");
+        showNotification("Bid rejected and archived successfully!");
       } catch (error) {
-        console.error("Error rejecting bid:", error);
-        showNotification("Failed to reject bid. Please try again.", "error");
+        console.error("Error archiving bid:", error);
+        showNotification("Failed to archive bid. Please try again.", "error");
       }
     };
 
-    const requestMoreInfo = async (bidId) => {
-      viewBidDetails(bids.value.find(bid => bid.id === bidId));
-      showRequestInfoModal();
+    const restoreBid = async (archivedBidId) => {
+      try {
+        const archivedBid = archivedBids.value.find(bid => bid.id === archivedBidId);
+        
+        if (!archivedBid) {
+          showNotification("Archived bid not found", "error");
+          return;
+        }
+
+        // Remove archive-specific fields - use underscore prefix to avoid unused variable warnings
+        // eslint-disable-next-line no-unused-vars
+        const { archivedAt: _archivedAt, archiveReason: _archiveReason, archivedBy: _archivedBy, originalBidId: _originalBidId, ...restoreData } = archivedBid;
+        
+        const restoredBidData = {
+          ...restoreData,
+          status: 'Pending',
+          restoredAt: serverTimestamp(),
+          restoredBy: 'admin',
+        };
+
+        await addDoc(collection(db, "bids"), restoredBidData);
+        await deleteDoc(doc(db, "archivedBids", archivedBidId));
+        
+        showNotification("Bid restored successfully!");
+      } catch (error) {
+        console.error("Error restoring bid:", error);
+        showNotification("Failed to restore bid. Please try again.", "error");
+      }
+    };
+
+    const permanentlyDeleteBid = async (archivedBidId) => {
+      if (!confirm("Are you sure you want to permanently delete this bid? This action cannot be undone.")) {
+        return;
+      }
+
+      try {
+        await deleteDoc(doc(db, "archivedBids", archivedBidId));
+        showNotification("Bid permanently deleted!");
+      } catch (error) {
+        console.error("Error deleting bid:", error);
+        showNotification("Failed to delete bid. Please try again.", "error");
+      }
     };
 
     const submitInfoRequest = async () => {
@@ -536,13 +731,11 @@ export default {
           infoRequestDate: new Date()
         });
         
-        // Update local state
         const index = bids.value.findIndex(bid => bid.id === activeBid.value.id);
         if (index !== -1) {
           bids.value[index].status = "More Info Requested";
           bids.value[index].infoRequested = infoRequestText.value;
           
-          // Also update active bid
           activeBid.value.status = "More Info Requested";
           activeBid.value.infoRequested = infoRequestText.value;
         }
@@ -556,18 +749,15 @@ export default {
     };
 
     const showNotification = (message, type = "success") => {
-      // Create notification element
       const notification = document.createElement("div");
       notification.className = `notification ${type}`;
       notification.textContent = message;
       document.body.appendChild(notification);
       
-      // Add animation class after a short delay
       setTimeout(() => {
         notification.classList.add("show");
       }, 10);
       
-      // Remove notification after timeout
       setTimeout(() => {
         notification.classList.remove("show");
         setTimeout(() => {
@@ -580,7 +770,6 @@ export default {
       router.push({ name: "BidDetail", params: { id: bidId } });
     };
 
-    // Register a storage-only bid into Firestore
     const registerBid = async (bid) => {
       const bidId = bid.id;
       try {
@@ -601,7 +790,16 @@ export default {
       }
     };
 
-    onMounted(fetchBids);
+    // View archived bid details
+    const viewArchivedBidDetails = (bid) => {
+      activeBid.value = { ...bid };
+      isViewingDetails.value = true;
+    };
+
+    onMounted(() => {
+      fetchBids();
+      fetchArchivedBids();
+    });
 
     return {
       bids,
@@ -613,9 +811,13 @@ export default {
       isRequestingInfo,
       activeBid,
       infoRequestText,
+      activeTab,
+      archivedBids,
+      archiveFilter,
+      totalArchivedCount,
+      filteredArchivedBids,
       pendingBidsCount,
       approvedBidsCount,
-      rejectedBidsCount,
       truncateDescription,
       formatCurrency,
       formatDate,
@@ -625,10 +827,12 @@ export default {
       closeRequestInfoModal,
       approveBid,
       rejectBid,
-      requestMoreInfo,
       submitInfoRequest,
       navigateToBidDetail,
-      registerBid
+      registerBid,
+      restoreBid,
+      permanentlyDeleteBid,
+      viewArchivedBidDetails,
     };
   },
 };
@@ -759,6 +963,42 @@ export default {
 
 .card-content {
   padding: 30px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.tab-btn.active {
+  background-color: #0f2942;
+  color: white;
+  box-shadow: 0 2px 4px rgba(15, 41, 66, 0.2);
+}
+
+.tab-btn:hover:not(.active) {
+  background-color: #e2e8f0;
+  color: #475569;
 }
 
 /* Action Bar */
@@ -1026,9 +1266,11 @@ export default {
   background-color: #bfdbfe;
 }
 
-.card-action-btn:enable {
+.card-action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background-color: #f3f4f6 !important;
+  color: #9ca3af !important;
 }
 
 /* Status Badges */

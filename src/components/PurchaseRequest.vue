@@ -494,7 +494,7 @@
                             </svg>
                             View Details
                           </button>
-                          <button v-if="request.status.toLowerCase() === 'pending'" class="action-btn edit-btn" @click="editRequest(request)">
+                          <button class="action-btn edit-btn" @click="editRequest(request)">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                               <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -511,6 +511,14 @@
                           </button>
                         </div>
                         <div class="updated-time">
+                          <!-- Add edit indicator -->
+                          <span v-if="request.isEdited" class="edited-indicator">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Edited
+                          </span>
                           Last updated: {{ request.lastUpdated }}
                         </div>
                       </div>
@@ -523,13 +531,307 @@
         </div>
       </div>
     </div>
+
+    <!-- Request Details Modal -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-container" @click.stop>
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <div class="modal-header-content">
+            <div class="modal-icon">
+              <svg v-if="isEditMode" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </div>
+            <div class="modal-title-section">
+              <div class="modal-title-with-indicator">
+                <h2 class="modal-title">
+                  {{ isEditMode ? 'Edit Purchase Request' : 'Purchase Request Details' }}
+                </h2>
+                <span v-if="!isEditMode && selectedRequest?.isEdited" class="modal-edited-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  Edited
+                </span>
+              </div>
+              <p class="modal-subtitle">
+                Request ID: #{{ selectedRequest?.requestId || selectedRequest?.id?.substring(0, 8) }}
+              </p>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <!-- Remove the canEdit condition -->
+            <button v-if="!isEditMode" @click="enableEditMode" class="btn-edit">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              Edit
+            </button>
+            <button @click="closeModal" class="btn-close">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="modal-content">
+          <form v-if="isEditMode" @submit.prevent="saveChanges" class="modal-form">
+            <!-- Edit Form -->
+            <div class="form-grid">
+              <!-- Item Information Section -->
+              <div class="form-section-modal">
+                <h3 class="section-title-modal">Item Information</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label-modal">Item Name *</label>
+                    <input
+                      type="text"
+                      v-model="editForm.itemName"
+                      class="input-field-modal"
+                      :class="{ 'error': editErrors.itemName }"
+                    />
+                    <span v-if="editErrors.itemName" class="error-message">{{ editErrors.itemName }}</span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-modal">Quantity *</label>
+                    <input
+                      type="number"
+                      v-model="editForm.quantity"
+                      class="input-field-modal"
+                      min="1"
+                      :class="{ 'error': editErrors.quantity }"
+                    />
+                    <span v-if="editErrors.quantity" class="error-message">{{ editErrors.quantity }}</span>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label-modal">Category *</label>
+                    <select v-model="editForm.category" class="input-field-modal" :class="{ 'error': editErrors.category }">
+                      <option value="">Select a category</option>
+                      <option v-for="category in categories" :key="category" :value="category">
+                        {{ category }}
+                      </option>
+                    </select>
+                    <span v-if="editErrors.category" class="error-message">{{ editErrors.category }}</span>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-modal">Priority *</label>
+                    <select v-model="editForm.priority" class="input-field-modal" :class="{ 'error': editErrors.priority }">
+                      <option value="">Select priority</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="particulars">Particulars</option>
+                    </select>
+                    <span v-if="editErrors.priority" class="error-message">{{ editErrors.priority }}</span>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label-modal">Estimated Cost (₱)</label>
+                    <input
+                      type="number"
+                      v-model="editForm.estimatedCost"
+                      class="input-field-modal"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-modal">Required Date *</label>
+                    <input
+                      type="date"
+                      v-model="editForm.requiredDate"
+                      class="input-field-modal"
+                      :class="{ 'error': editErrors.requiredDate }"
+                    />
+                    <span v-if="editErrors.requiredDate" class="error-message">{{ editErrors.requiredDate }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description Section -->
+              <div class="form-section-modal">
+                <h3 class="section-title-modal">Description & Justification</h3>
+                <div class="form-group">
+                  <label class="form-label-modal">Description *</label>
+                  <textarea
+                    v-model="editForm.description"
+                    class="input-field-modal textarea-modal"
+                    rows="4"
+                    :class="{ 'error': editErrors.description }"
+                  ></textarea>
+                  <span v-if="editErrors.description" class="error-message">{{ editErrors.description }}</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label-modal">Justification *</label>
+                  <textarea
+                    v-model="editForm.justification"
+                    class="input-field-modal textarea-modal"
+                    rows="3"
+                    :class="{ 'error': editErrors.justification }"
+                  ></textarea>
+                  <span v-if="editErrors.justification" class="error-message">{{ editErrors.justification }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Form Actions -->
+            <div class="modal-footer">
+              <button type="button" @click="cancelEdit" class="btn-cancel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Cancel
+              </button>
+              <button type="submit" class="btn-save" :disabled="isSaving">
+                <div v-if="isSaving" class="spinner-small"></div>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+              </button>
+            </div>
+          </form>
+
+          <!-- View Mode -->
+          <div v-else class="modal-details">
+            <!-- Status Badge -->
+            <div class="detail-status-section">
+              <div class="status-badge-large" :class="`status-${selectedRequest?.status?.toLowerCase().replace(' ', '-')}`">
+                <div class="status-indicator-large"></div>
+                <span class="status-text">{{ selectedRequest?.status }}</span>
+              </div>
+              <div class="request-dates">
+                <div class="date-item">
+                  <span class="date-label">Submitted:</span>
+                  <span class="date-value">{{ selectedRequest?.submittedDate }}</span>
+                </div>
+                <div class="date-item">
+                  <span class="date-label">Last Updated:</span>
+                  <span class="date-value">{{ selectedRequest?.lastUpdated }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Details Grid -->
+            <div class="details-grid">
+              <!-- Item Details -->
+              <div class="detail-section">
+                <h3 class="detail-section-title">Item Details</h3>
+                <div class="detail-items">
+                  <div class="detail-row">
+                    <span class="detail-label">Item Name:</span>
+                    <span class="detail-value">{{ selectedRequest?.itemName }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Quantity:</span>
+                    <span class="detail-value">{{ selectedRequest?.quantity }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Category:</span>
+                    <span class="detail-value">{{ selectedRequest?.category }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Priority:</span>
+                    <span class="detail-value priority-badge" :class="`priority-${selectedRequest?.priority?.toLowerCase()}`">
+                      {{ selectedRequest?.priority }}
+                    </span>
+                  </div>
+                  <div class="detail-row" v-if="selectedRequest?.estimatedCost">
+                    <span class="detail-label">Estimated Cost:</span>
+                    <span class="detail-value cost-value">₱{{ selectedRequest?.estimatedCost?.toLocaleString() }}</span>
+                  </div>
+                  <div class="detail-row" v-if="selectedRequest?.requiredDate">
+                    <span class="detail-label">Required Date:</span>
+                    <span class="detail-value">{{ selectedRequest?.requiredDate }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="detail-section">
+                <h3 class="detail-section-title">Description</h3>
+                <div class="detail-text-content">
+                  <p>{{ selectedRequest?.description }}</p>
+                </div>
+              </div>
+
+              <!-- Justification -->
+              <div class="detail-section" v-if="selectedRequest?.justification">
+                <h3 class="detail-section-title">Justification</h3>
+                <div class="detail-text-content">
+                  <p>{{ selectedRequest?.justification }}</p>
+                </div>
+              </div>
+
+              <!-- Document Section -->
+              <div class="detail-section" v-if="selectedRequest?.prDocumentURL">
+                <h3 class="detail-section-title">Attached Document</h3>
+                <div class="document-preview">
+                  <div class="document-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>{{ selectedRequest?.originalFileName || 'Purchase Request Document' }}</span>
+                  </div>
+                  <button @click="downloadDocument" class="btn-download-doc">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- View Mode Footer -->
+            <div class="modal-footer">
+              <button @click="closeModal" class="btn-close-modal">
+                Close
+              </button>
+              <div class="footer-actions">
+                <button v-if="selectedRequest?.status?.toLowerCase() === 'approved'" @click="downloadPDF(selectedRequest)" class="btn-download">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Download PDF
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed, reactive, onMounted } from "vue";
 import { db, auth, storage } from "@/firebase";
-import { collection, addDoc, serverTimestamp, updateDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, updateDoc, query, where, getDocs, doc } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default {
@@ -578,8 +880,8 @@ export default {
     const file = ref(null);
     const fileError = ref("");
     
-    // Sidebar state
-    const sidebarOpen = ref(true);
+    // Sidebar state - changed from true to false
+    const sidebarOpen = ref(false);
     const toggleSidebar = () => { sidebarOpen.value = !sidebarOpen.value; };
     
     // Active tab state
@@ -602,6 +904,27 @@ export default {
     
     // Replace mock data with real data from Firebase
     const mockRequests = ref([]);
+
+    // Modal state
+    const showModal = ref(false);
+    const selectedRequest = ref(null);
+    const isEditMode = ref(false);
+    const isSaving = ref(false);
+
+    // Edit form data
+    const editForm = reactive({
+      itemName: "",
+      quantity: 1,
+      description: "",
+      category: "",
+      priority: "",
+      estimatedCost: null,
+      requiredDate: "",
+      justification: ""
+    });
+
+    // Edit form validation errors
+    const editErrors = reactive({});
 
     // Helper function to get time ago
     const getTimeAgo = (date) => {
@@ -719,6 +1042,8 @@ export default {
           const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : 
                            data.updatedAt ? new Date(data.updatedAt) : new Date();
 
+          const editedAt = data.editedAt?.toDate ? data.editedAt.toDate() : null;
+
           requestsMap.set(doc.id, {
             id: doc.id,
             requestId: data.requestId || doc.id.substring(0, 8).toUpperCase(),
@@ -734,7 +1059,10 @@ export default {
             submittedDate: createdAt.toLocaleDateString(),
             lastUpdated: getTimeAgo(updatedAt),
             createdAt: createdAt,
-            updatedAt: updatedAt
+            updatedAt: updatedAt,
+            isEdited: data.isEdited || false,
+            editedAt: editedAt,
+            editedBy: data.editedBy
           });
         });
         
@@ -749,6 +1077,8 @@ export default {
             
             const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate() : 
                              data.updatedAt ? new Date(data.updatedAt) : new Date();
+
+            const editedAt = data.editedAt?.toDate ? data.editedAt.toDate() : null;
 
             requestsMap.set(doc.id, {
               id: doc.id,
@@ -765,7 +1095,10 @@ export default {
               submittedDate: createdAt.toLocaleDateString(),
               lastUpdated: getTimeAgo(updatedAt),
               createdAt: createdAt,
-              updatedAt: updatedAt
+              updatedAt: updatedAt,
+              isEdited: data.isEdited || false,
+              editedAt: editedAt,
+              editedBy: data.editedBy
             });
           }
         });
@@ -832,38 +1165,174 @@ export default {
       }
     };
 
-    // Action handlers
+    // Computed property to check if request can be edited - now always true
+    const canEdit = computed(() => {
+      return true; // Allow editing of all requests
+    });
+
+    // Open modal in view mode
     const viewRequestDetails = (request) => {
-      console.log('Viewing request:', request);
-      const details = `
-        ID: ${request.requestId || request.id}
-        Item: ${request.itemName}
-        Status: ${request.status}
-        Quantity: ${request.quantity}
-        Priority: ${request.priority}
-        Category: ${request.category}
-        Estimated Cost: ₱${request.estimatedCost?.toLocaleString() || 'N/A'}
-        Required Date: ${request.requiredDate || 'N/A'}
-        
-        Description: ${request.description}
-        
-        Justification: ${request.justification || 'N/A'}
-        
-        Submitted: ${request.submittedDate}
-        Last Updated: ${request.lastUpdated}
-      `;
-      alert(details);
+      selectedRequest.value = request;
+      isEditMode.value = false;
+      showModal.value = true;
     };
 
+    // Open modal in edit mode
     const editRequest = (request) => {
-      console.log('Editing request:', request);
-      if (request.status.toLowerCase() === 'pending') {
-        alert(`Edit functionality for ${request.itemName} would open here.\n\nNote: Only pending requests can be edited.`);
-      } else {
-        alert('This request cannot be edited as it is no longer pending.');
+      selectedRequest.value = request;
+      populateEditForm(request);
+      isEditMode.value = true;
+      showModal.value = true;
+    };
+
+    // Populate edit form with request data
+    const populateEditForm = (request) => {
+      editForm.itemName = request.itemName || "";
+      editForm.quantity = request.quantity || 1;
+      editForm.description = request.description || "";
+      editForm.category = request.category || "";
+      editForm.priority = request.priority || "";
+      editForm.estimatedCost = request.estimatedCost || null;
+      editForm.requiredDate = request.requiredDate || "";
+      editForm.justification = request.justification || "";
+    };
+
+    // Enable edit mode from view mode
+    const enableEditMode = () => {
+      if (!canEdit.value) {
+        showNotification("error", "This request cannot be edited.");
+        return;
+      }
+      populateEditForm(selectedRequest.value);
+      isEditMode.value = true;
+    };
+
+    // Validate edit form
+    const validateEditForm = () => {
+      const errors = {};
+      
+      if (!editForm.itemName.trim()) {
+        errors.itemName = "Item name is required";
+      }
+      
+      if (!editForm.quantity || editForm.quantity < 1) {
+        errors.quantity = "Quantity must be at least 1";
+      }
+      
+      if (!editForm.category) {
+        errors.category = "Please select a category";
+      }
+      
+      if (!editForm.priority) {
+        errors.priority = "Please select a priority level";
+      }
+      
+      if (!editForm.description.trim()) {
+        errors.description = "Description is required";
+      } else if (editForm.description.trim().length < 10) {
+        errors.description = "Description must be at least 10 characters";
+      }
+      
+      if (!editForm.requiredDate) {
+        errors.requiredDate = "Required date is required";
+      }
+      
+      if (!editForm.justification.trim()) {
+        errors.justification = "Justification is required";
+      }
+      
+      return errors;
+    };
+
+    // Save changes
+    const saveChanges = async () => {
+      // Validate form
+      const errors = validateEditForm();
+      
+      if (Object.keys(errors).length > 0) {
+        Object.assign(editErrors, errors);
+        return;
+      }
+
+      // Clear previous validation errors
+      Object.keys(editErrors).forEach(key => {
+        delete editErrors[key];
+      });
+
+      isSaving.value = true;
+
+      try {
+        const currentUser = auth.currentUser;
+        
+        if (!currentUser) {
+          showNotification("error", "You must be logged in to update a request");
+          return;
+        }
+
+        // Update the request in Firestore with edit tracking
+        const requestRef = doc(db, "purchaseRequests", selectedRequest.value.id);
+        const updateData = {
+          ...editForm,
+          updatedAt: serverTimestamp(),
+          isEdited: true, // Mark as edited
+          editedAt: serverTimestamp(), // Track when it was edited
+          editedBy: currentUser.uid // Track who edited it
+        };
+
+        await updateDoc(requestRef, updateData);
+
+        // Update local data
+        const requestIndex = mockRequests.value.findIndex(r => r.id === selectedRequest.value.id);
+        if (requestIndex !== -1) {
+          mockRequests.value[requestIndex] = {
+            ...mockRequests.value[requestIndex],
+            ...editForm,
+            lastUpdated: 'Just now',
+            isEdited: true,
+            editedAt: new Date()
+          };
+          selectedRequest.value = mockRequests.value[requestIndex];
+        }
+
+        showNotification("success", "Purchase request updated successfully!");
+        isEditMode.value = false;
+
+      } catch (error) {
+        console.error("Error updating purchase request:", error);
+        showNotification("error", "Failed to update request. Please try again.");
+      } finally {
+        isSaving.value = false;
       }
     };
 
+    // Cancel edit mode
+    const cancelEdit = () => {
+      isEditMode.value = false;
+      // Clear validation errors
+      Object.keys(editErrors).forEach(key => {
+        delete editErrors[key];
+      });
+    };
+
+    // Close modal
+    const closeModal = () => {
+      showModal.value = false;
+      selectedRequest.value = null;
+      isEditMode.value = false;
+      // Clear validation errors
+      Object.keys(editErrors).forEach(key => {
+        delete editErrors[key];
+      });
+    };
+
+    // Download document
+    const downloadDocument = () => {
+      if (selectedRequest.value?.prDocumentURL) {
+        window.open(selectedRequest.value.prDocumentURL, '_blank');
+      }
+    };
+
+    // Download PDF function
     const downloadPDF = (request) => {
       console.log('Downloading PDF for:', request);
       if (request.prDocumentURL) {
@@ -1058,7 +1527,7 @@ export default {
           // Only add file-related fields if a file was uploaded
           ...(fileURL && {
             prDocumentURL: fileURL,
-            fileName: cleanFileName,
+                       fileName: cleanFileName,
             originalFileName: file.value.name,
             fileType: file.value.type,
             fileSize: file.value.size,
@@ -1076,7 +1545,7 @@ export default {
 
         console.log("Purchase request saved with ID:", generatedId);
         
-        // Show success notification
+        // Show success notification (removed localhost notification)
         showNotification("success", "Purchase request submitted successfully!");
         
         // Reset form
@@ -1194,6 +1663,20 @@ export default {
       downloadPDF,
       fetchUserPurchaseRequests,
       updateStatsFromMockData,
+      
+      // Modal returns
+      showModal,
+      selectedRequest,
+      isEditMode,
+      isSaving,
+      editForm,
+      editErrors,
+      canEdit,
+      enableEditMode,
+      saveChanges,
+      cancelEdit,
+      closeModal,
+      downloadDocument,
       
       // Add the functions that were missing from return
       submitRequest,
@@ -2327,5 +2810,486 @@ export default {
 .loading-icon {
   animation: spin 2s linear infinite;
   color: #0f2942;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  background: linear-gradient(135deg, #0f2942 0%, #102a42 100%);
+  padding: 24px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.modal-title-section {
+  flex: 1;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.modal-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modal Content */
+.modal-content {
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+}
+
+/* Edit Form Styles */
+.modal-form {
+  padding: 30px;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-section-modal {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.section-title-modal {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f2942;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.form-label-modal {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.input-field-modal {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #111827;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.input-field-modal:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-field-modal.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.textarea-modal {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* View Mode Styles */
+.modal-details {
+  padding: 30px;
+}
+
+.detail-status-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.status-badge-large {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-indicator-large {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.request-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-item {
+  display: flex;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.date-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.date-value {
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Details Grid */
+.details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-section {
+  background-color: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #f3f4f6;
+}
+
+.detail-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f2942;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-items {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #111827;
+  font-weight: 600;
+  text-align: right;
+}
+
+.priority-badge {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.cost-value {
+  color: #059669;
+  font-size: 1.1rem;
+}
+
+.detail-text-content {
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-text-content p {
+  margin: 0;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* Document Preview */
+.document-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.document-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #374151;
+}
+
+.btn-download-doc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-download-doc:hover {
+  background: #e5e7eb;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #0f2942;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: #1a4971;
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modal-container {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .modal-header {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .modal-actions {
+    align-self: flex-end;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .detail-status-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .detail-value {
+    text-align: left;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .footer-actions {
+    justify-content: center;
+  }
 }
 </style>
